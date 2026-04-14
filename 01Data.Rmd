@@ -1,0 +1,653 @@
+---
+title: "Data"
+date: "`r format(Sys.Date())`."
+output:
+  html_document:
+    theme: readable
+    toc: yes
+    number_sections: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: true
+    code_download: yes
+    df_print: paged
+---
+
+<style type="text/css">
+body, td{ font-size: 14px; }
+code.r{ font-size: 12px; }
+pre{ font-size: 12px }
+h1.title {
+  font-size: 24px;
+  color: Black;
+}
+h1 { /* Header 1 */
+  font-size: 20px;
+  color: Black;
+}
+h2 { /* Header 2 */
+  font-size: 16px;
+  color: Black;
+}
+h3 { /* Header 3 */
+    font-size: 14px;
+  color: Black;
+}
+h4 { /* Header 4 */
+    font-size: 12px;
+  color: Black;
+}
+#TOC {
+  color: DarkBlue;
+  font-size: 16px;
+}
+</style>
+
+```{r include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(echo = FALSE, comment="", warning = FALSE,
+                      message=FALSE, fig.align = "center")
+```
+
+# Definir path local
+
+```{r}
+path <- here::here()
+setwd(path)
+```
+
+# Paquetes
+
+```{r}
+library(ggplot2)
+library(spatstat)
+library(fpp3)
+library(leaflet)
+library(sf)
+#perfil del continente
+library(rnaturalearth)
+```
+
+
+# Data
+
+Sismic events of ['https://earthquake.usgs.gov/'] from 01-01-1901 to 01-01-2025
+
+```{r cars}
+data <- readRDS('input/sismicevents.rds')
+data$time <- as.POSIXct(data$time, tz = "UTC")
+```
+
+```{r}
+data |> st_drop_geometry() |> 
+  select(time, magnitude, depth) |> head()
+```
+```{r}
+data |> st_drop_geometry() |> 
+  select(time, magnitude, depth) |> tail()
+```
+
+# Time vs Magnitude
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+ggplot(data, aes(time, magnitude)) + 
+  geom_point(size = 1, alpha = 0.25) +
+  scale_x_datetime(
+    date_breaks = "10 years",
+    date_labels = "%Y"
+  ) + geom_vline(xintercept =  as.POSIXct("1980-01-01 00:00:00"),
+                 linetype="dotted", 
+                color = "red", size=0.5)+
+  coord_cartesian(
+    xlim = c(
+      as.POSIXct("1902-01-01", tz = "UTC"),
+      as.POSIXct("2025-07-30", tz = "UTC")
+    ), 
+    ylim = c(0,10)
+  ) +
+  theme_minimal()
+```
+
+## Magnitude
+
+```{r}
+table(data$magType)
+```
+Body-Wave Magnitude — mb
+Surface-Wave Magnitude — ms
+Moment Magnitude — mw
+
+Variants of Mw
+mwb → moment magnitude (body-wave inversion)
+mwc → centroid moment tensor magnitude
+mww → W-phase inversion
+mwr → regional moment magnitude
+
+```{r}
+x <- data |> filter(magType == "mw") 
+table(year(x$time))
+```
+
+```{r}
+ggplot(data, aes(x = time, y = magnitude)) +
+  geom_point(size = 0.1) +
+  ggtitle("Horus catalogue magnitude time series")
+```
+
+```{r}
+mw_family <- c("mw", "mwb", "mwc", "mwr", "mww")
+dtmag <- data |> filter(magType %in% mw_family) |>
+            filter(magnitude > 5)
+```
+
+
+# Locations
+
+```{r}
+continent <- ne_countries(continent = "South America", returnclass = "sf")
+
+paises <- c("COL", "ECU", "PER", "CHL")
+cont <- continent[continent$adm0_a3 %in% paises, ] |> st_make_valid()
+cont_u <- st_union(cont) |> st_make_valid()
+
+# Natural Earth physical coastline (LINESTRING)
+coast <- ne_download(scale = 50, type = "coastline", category = "physical",
+                     returnclass = "sf") |> st_make_valid()
+
+# Match CRS
+coast <- st_transform(coast, st_crs(cont_u))
+
+# Keep only coastline segments that fall on/near your selected countries
+perfil <- st_intersection(coast, cont_u)
+
+plot(st_geometry(perfil), col = "blue")
+```
+
+```{r}
+library(sf)
+library(lwgeom)  # para st_make_valid (muy recomendable)
+
+sf_use_s2(TRUE)
+
+ancho_km <- 400
+buffer_costa <- st_union(st_buffer(perfil, dist = ancho_km * 1000))
+buffer_costa <- st_make_valid(buffer_costa)  # arregla geometrías inválidas
+
+# Caja Falklands en 4326
+falklands_box <- st_as_sfc(
+  st_bbox(c(xmin = -64, xmax = -55, ymin = -62, ymax = -47), crs = st_crs(4326))
+)
+
+# Proyectar a un CRS planar para hacer difference de forma estable
+buffer_3857 <- st_transform(buffer_costa, 3857) |> st_make_valid()
+falk_3857   <- st_transform(falklands_box, 3857) |> st_make_valid()
+
+buffer_sin_falk_3857 <- st_difference(buffer_3857, falk_3857) |> st_make_valid()
+buffer <- st_transform(buffer_sin_falk_3857, 4326)
+
+plot(st_geometry(buffer))
+```
+
+
+
+
+
+
+```{r}
+# Unificar franja para hacer el filtro más rápido
+
+dt <- dtmag |> filter(year(time) > 1980 )
+sismos <- dt[st_within(dt, buffer, sparse = FALSE), ]
+
+plot(st_geometry(sismos))
+```
+
+
+
+```{r}
+pal <- colorNumeric(
+  palette = "viridis",
+  domain  = data$magnitude,
+  reverse = TRUE
+)
+
+sismos |> 
+  # filter(magnitude > 2.5) |>
+  leaflet() |>
+  addProviderTiles(providers$CartoDB.Positron) |>
+  addCircleMarkers(
+    lng = ~longitude,
+    lat = ~latitude,
+    radius = 0.5,
+    color = ~pal(magnitude),
+    opacity = 0.7,
+    fillOpacity = 0.6
+  ) |>
+  addLegend(
+    pal = pal,
+    values = ~magnitude,
+    title = "Magnitude"
+  )
+
+```
+
+```{r}
+saveRDS(sismos, "input/sismos.rds")
+```
+
+
+# Exploratory
+
+```{r}
+dim(sismos)
+```
+
+```{r}
+library(sf)
+library(ggplot2)
+library(patchwork)
+
+# Check CRS
+st_crs(perfil)
+st_crs(buffer)
+st_crs(sismos)
+
+# If needed, transform everything to the same CRS (e.g., WGS84)
+perfil  <- st_transform(perfil, 4326)
+buffer  <- st_transform(st_as_sf(buffer), 4326)
+sismos  <- st_transform(sismos, 4326)
+```
+
+## Space
+
+```{r}
+map_buffer <- ggplot() +
+  geom_sf(data = buffer, fill = "lightgreen", alpha = 0.4, color = NA) +
+  geom_sf(data = perfil, color = "brown", linewidth = 0.6) +
+  labs(title = "(a)")+#Pacific Coastline and 400 km Buffer") +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_line(color = "grey85"),
+    plot.title = element_text(face = "bold")
+  )
+map_buffer
+```
+
+```{r}
+map_points <- ggplot() +
+  geom_sf(data = sismos, color = "darkgreen", size = 0.3, alpha = 0.5) +
+  labs(title = "(b)")+#Seismic Events (1980–2025)") +
+  theme_minimal() +
+  theme(
+    panel.grid.major = element_line(color = "grey85"),
+    plot.title = element_text(face = "bold")
+  )
+map_points
+```
+
+```{r}
+bbox <- st_bbox(buffer)
+
+map_buffer <- map_buffer + coord_sf(
+  xlim = c(bbox["xmin"], bbox["xmax"]),
+  ylim = c(bbox["ymin"], bbox["ymax"]),
+  expand = FALSE
+) +
+  scale_x_continuous(
+    breaks = seq(-90, -60, by = 10)
+  )
+
+map_points <- map_points + coord_sf(
+  xlim = c(bbox["xmin"], bbox["xmax"]),
+  ylim = c(bbox["ymin"], bbox["ymax"]),
+  expand = FALSE
+) +
+  scale_x_continuous(
+    breaks = seq(-90, -60, by = 10)
+  )
+```
+
+```{r}
+map_buffer + map_points
+```
+
+
+```{r}
+combined_map <- map_buffer + map_points
+ggsave(
+  filename = "figure_study_region.png",
+  plot = combined_map,
+  width = 12,
+  height = 6,
+  dpi = 300
+)
+```
+
+
+## Time
+
+```{r}
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(fpp3)
+```
+
+```{r, fig.width= 6, fig.height= 3}
+sismos$year  <- year(sismos$time)
+sismos$month <- floor_date(sismos$time, "month")
+
+# Yearly counts
+year_counts <- sismos %>%
+  count(year)
+
+gtime <- ggplot(year_counts, aes(year, n)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "(c) Yearly Earthquake Counts",
+       x = "Year", y = "Number of Events") +
+  theme_minimal()
+gtime
+```
+
+```{r}
+ggsave(
+  filename = "figure_time.png",
+  plot = gtime,
+  width = 6,
+  height = 3,
+  dpi = 300
+)
+```
+
+```{r}
+combined_map <- map_buffer + map_points
+ggsave(
+  filename = "figure_combined.png",
+  plot = map_buffer + map_points + gtime,
+  # width = 12,
+  height = 6,
+  dpi = 300
+)
+```
+
+## Magnitud
+
+```{r}
+table(sismos$magType)
+```
+
+
+
+```{r}
+map_magnitude <- ggplot(sismos, 
+                        aes(x = time, y = magnitude)) +
+  geom_point(size = 0.1) +
+  ggtitle("(c) Horus catalogue magnitude time series")+
+  theme_minimal()
+map_magnitude
+```
+
+```{r}
+combined_map <- map_buffer + map_points
+ggsave(
+  filename = "figure_combined.png",
+  plot = map_buffer + map_points + map_magnitude,
+  width = 12,
+  height = 6,
+  dpi = 300
+)
+```
+
+
+# Gutenberg–Richter Analysis (Critical for ETAS)
+
+```{r}
+ggplot(sismos, aes(magnitude)) +
+  geom_histogram(binwidth = 0.1,
+                 fill = "grey70",
+                 color = "black") +
+  theme_minimal() +
+  labs(title = expression("Histogram of Moment Magnitudes (" * M >= 5 * ")"),
+       x = "Moment Magnitude (Mw)",
+       y = "Frequency")
+```
+```{r}
+M0 <- 5
+mag_sorted <- sort(sismos$magnitude)
+
+unique_mag <- sort(unique(mag_sorted))
+
+Ncum <- sapply(unique_mag, function(m) {
+  sum(mag_sorted >= m)
+})
+
+gr_df <- data.frame(
+  m = unique_mag,
+  logN = log10(Ncum)
+)
+```
+
+
+
+```{r}
+ggplot(gr_df, aes(m, logN)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
+  theme_minimal() +
+  labs(title = "Gutenberg–Richter Plot",
+       x = "Magnitude (Mw)",
+       y = expression(log[10]~N(M >= m)))
+```
+
+```{r}
+gr_sub <- gr_df %>% filter(m >= 5)
+
+fit <- lm(logN ~ m, data = gr_sub)
+summary(fit)
+```
+
+By choosing: $M_0=5$
+* Linear Gutenberg–Richter behavior
+* Physically plausible b-value
+* High explanatory power
+* No obvious magnitude-scale instability
+* This validates your threshold choice.
+
+## Temporal stability of b-value
+
+Roughly stable mean → stationary background rate.
+```{r}
+sismos$year <- year(sismos$time)
+
+year_counts <- sismos%>% count(year)
+
+ggplot(year_counts, aes(year, n)) +
+  geom_line() +
+  geom_point() +
+  theme_minimal() +
+  labs(title = 
+         expression("Yearly Counts (" * M >= 5 * ")"),
+       x = "Year",
+       y = "Number of Events")
+```
+
+β1 significant → background rate may be nonstationary.
+```{r}
+trend_fit <- lm(n ~ year, data = year_counts)
+summary(trend_fit)
+```
+
+In seismicity, expect vmr >> 1 due to aftershocks.
+```{r}
+vmr <- var(year_counts$n) / mean(year_counts$n)
+vmr
+```
+
+Linear growth → stationary rate.
+```{r}
+year_counts <- year_counts %>%
+  arrange(year) %>%
+  mutate(cumN = cumsum(n))
+
+ggplot(year_counts, aes(year, cumN)) +
+  geom_line() +
+  theme_minimal() +
+  labs(title = 
+         expression("Cumulative Counts (" * M >= 5 * ")"),
+       x = "Year",
+       y = "Cumulative Events")
+```
+The LOESS curve shows underlying drift ignoring bursts.
+
+```{r}
+ggplot(year_counts, aes(year, n)) +
+  geom_line(alpha = 0.5) +
+  geom_smooth(method = "loess", span = 0.3, se = FALSE, color = "red") +
+  theme_minimal() +
+  labs(title = 
+  expression("Smoothed Yearly Counts (" * M >= 5 * ")"))
+```
+
+```{r}
+glm_fit <- glm(n ~ year, 
+               family = poisson(link = "log"), 
+               data = year_counts)
+
+summary(glm_fit)
+```
+
+
+<!-- What This Does NOT Guarantee -->
+<!-- We still need to check: -->
+<!-- Temporal stability of b-value -->
+<!-- Stability across decades -->
+<!-- Stability across space (coastal segments) -->
+<!-- Because if b changes over time, ETAS parameters may drift. -->
+
+
+
+<!-- Check temporal stationarity of counts (M ≥ 5) -->
+<!-- ```{r} -->
+<!-- library(ggplot2) -->
+
+<!-- ggplot(sismos, aes(magnitude, fill = magType)) + -->
+<!--   geom_density(alpha = 0.4) + -->
+<!--   theme_minimal() + -->
+<!--   labs(title = "Magnitude Density by Mw-Type", -->
+<!--        x = "Magnitude", y = "Density") -->
+<!-- ``` -->
+<!-- ```{r} -->
+<!-- library(ggplot2) -->
+
+<!-- ggplot(sismos, aes(magnitude, fill = magType)) + -->
+<!--   geom_density(alpha = 0.4) + -->
+<!--   theme_minimal() + -->
+<!--   labs(title = "Magnitude Density by Mw-Type", -->
+<!--        x = "Magnitude", y = "Density") -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- sismos <- sismos %>% -->
+<!--   arrange(time) -->
+
+<!-- tau <- diff(as.numeric(sismos$time))  # in minutes -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggplot(data.frame(tau = tau), aes(tau)) + -->
+<!--   geom_histogram(bins = 100) + -->
+<!--   scale_x_log10() + -->
+<!--   labs(title = "Distribution of Inter-event Times (log scale)", -->
+<!--        x = "Inter-event time (minutes)", y = "Frequency") + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- sismos$cumN <- 1:nrow(sismos) -->
+
+<!-- ggplot(sismos, aes(time, cumN)) + -->
+<!--   geom_line() + -->
+<!--   labs(title = "Cumulative Number of Events", -->
+<!--        x = "Time", y = "Cumulative Count") + -->
+<!--   theme_minimal() -->
+<!-- ``` -->
+
+
+<!-- # Other -->
+
+<!-- ```{r} -->
+<!-- # Add an integer id to each event -->
+<!-- data$event_num <- seq.int(nrow(data)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ## This is just the EPSG equivalent of WGS84 -->
+<!-- crs_wgs84 <- st_crs("EPSG:4326") -->
+<!-- # Generate an sf version of the catalogue where the longitude and latitude are -->
+<!-- # converted to a point object -->
+<!-- df_cat.sf <- st_as_sf(data, -->
+<!--   coords = c("longitude", "latitude"), -->
+<!--   crs = crs_wgs84 -->
+<!-- ) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- hist( -->
+<!--   data$magnitude -->
+<!-- ) -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- # data$Time <- as.Date(data$time) -->
+
+<!-- # print("Extract year") -->
+<!-- # extract the year and convert to numeric format -->
+<!-- data$Year <- as.numeric(format(data$time, "%Y")) -->
+
+<!-- countEventsInYear <- data %>% -->
+<!--   st_drop_geometry() %>% -->
+<!--   group_by(Year) %>% -->
+<!--   summarize(counts = n()) -->
+
+<!-- plot( -->
+<!--   countEventsInYear, -->
+<!--   type = "l", -->
+<!--   main = "Annual number of events for whole catalogue" -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- ggplot() + -->
+<!--   geom_hex(data = data[data$magnitude >= 0, ],  -->
+<!--            aes(x = longitude, y = latitude), bins = 50) + -->
+<!--   scale_fill_continuous(type = "viridis") + -->
+<!--   ggtitle("Density plot for M>3 events") + -->
+<!--   theme_bw() -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- ggplot() + -->
+<!--   geom_sf(data = data[data$magnitude > 0, ], size = 0.05) + -->
+<!--   geom_sf(data = data[data$magnitude > 3, ],  -->
+<!--           size = 0.5, color = "orange") + -->
+<!--   geom_sf(data = data[data$magnitude > 6, ],  -->
+<!--           size = 0.5, color = "red") + -->
+<!--   ggtitle("Map of event locations") -->
+<!-- ``` -->
+
+
+
+
+
+
+
+
+

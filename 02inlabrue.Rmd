@@ -1,0 +1,445 @@
+---
+title: "Data"
+date: "`r format(Sys.Date())`."
+output:
+  html_document:
+    theme: readable
+    toc: yes
+    number_sections: true
+    toc_depth: 4
+    toc_float: 
+      collapsed: true
+    code_download: yes
+    df_print: paged
+---
+
+<style type="text/css">
+body, td{ font-size: 14px; }
+code.r{ font-size: 12px; }
+pre{ font-size: 12px }
+h1.title {
+  font-size: 24px;
+  color: Black;
+}
+h1 { /* Header 1 */
+  font-size: 20px;
+  color: Black;
+}
+h2 { /* Header 2 */
+  font-size: 16px;
+  color: Black;
+}
+h3 { /* Header 3 */
+    font-size: 14px;
+  color: Black;
+}
+h4 { /* Header 4 */
+    font-size: 12px;
+  color: Black;
+}
+#TOC {
+  color: DarkBlue;
+  font-size: 16px;
+}
+</style>
+
+```{r include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(echo = FALSE, comment="", warning = FALSE,
+                      message=FALSE, fig.align = "center")
+```
+
+# Definir path local
+
+```{r}
+path <- here::here()
+setwd(path)
+```
+
+# Paquetes
+
+```{r}
+library(ETAS.inlabru)
+library(ggplot2)
+
+library(rnaturalearth)
+library(terra)
+library(sf)
+library(ggspatial)
+library(rnaturalearthdata)
+library(dplyr)
+library(lubridate)
+
+## This is just the EPSG equivalent of WGS84
+crs_wgs84 <- st_crs("EPSG:4326")
+```
+
+```{r}
+# install.packages("remotes")
+# remotes::install_github("edinburgh-seismicity-hub/ETAS.inlabru")
+```
+
+```{r}
+# library(ETAS.inlabru)
+# library(ggplot2)
+
+# Increase/decrease num.cores if you have more/fewer cores on your computer.
+# future::multisession works on both Windows, MacOS, and Linux
+num.cores <- 4
+future::plan(future::multisession, workers = num.cores)
+INLA::inla.setOption(num.threads = num.cores)
+# To deactivate parallelism, run
+#   future::plan(future::sequential)
+#   INLA::inla.setOption(num.threads = 1)
+```
+
+# Function
+
+```{r}
+# set copula transformations list
+link.f <- list(
+  mu = \(x) gamma_t(x, 0.3, 0.6),
+  K = \(x) unif_t(x, 0, 10),
+  alpha = \(x) unif_t(x, 0, 10),
+  c_ = \(x) unif_t(x, 0, 10),
+  p = \(x) unif_t(x, 1, 10)
+)
+
+# set inverse copula transformations list
+inv.link.f <- list(
+  mu = \(x) inv_gamma_t(x, 0.3, 0.6),
+  K = \(x) inv_unif_t(x, 0, 10),
+  alpha = \(x) inv_unif_t(x, 0, 10),
+  c_ = \(x) inv_unif_t(x, 0, 10),
+  p = \(x) inv_unif_t(x, 1, 10)
+)
+```
+
+
+# Data
+
+Sismic events of ['https://earthquake.usgs.gov/'] 
+
+```{r cars}
+data <- readRDS('process_data/sismos.rds')
+data$time <- as.POSIXct(data$time, tz = "UTC")
+```
+
+```{r}
+# Add an integer id to each event
+data$event_num <- seq.int(nrow(data))
+```
+
+```{r}
+## This is just the EPSG equivalent of WGS84
+crs_wgs84 <- st_crs("EPSG:4326")
+# Generate an sf version of the catalogue where the longitude and latitude are
+# converted to a point object
+df_cat.sf <- st_as_sf(data,
+  coords = c("longitude", "latitude"),
+  crs = crs_wgs84
+)
+```
+
+# Initialization
+
+```{r}
+# There may be some incorrectly registered data-times in the original data set,
+# that as.POSIXct() can't convert, depending on the system.
+# These should ideally be corrected, but for now, we just remove the rows that
+# couldn't be converted.
+dt <- na.omit(data)
+
+# set up parameters for selection
+start.date <- as.POSIXct("2008-01-01T00:00:00", 
+                         format = "%Y-%m-%dT%H:%M:%OS")
+end.date <- as.POSIXct("2010-01-01T00:00:00", 
+                       format = "%Y-%m-%dT%H:%M:%OS")
+# min.longitude <- -120
+# max.longitude <- -32
+# min.latitude <- -60
+# max.latitude <- 33
+M0 <- 2.5
+
+# set up conditions for selection
+aquila.sel <- (data$time >= start.date) &
+  (data$time < end.date) &(data$magnitude >= M0)
+  # (data$longitude >= min.longitude) &
+  # (data$longitude <= max.longitude) &
+  # (data$latitude >= min.latitude) &
+  # (data$latitude <= max.latitude) &
+  
+
+# select
+aquila <- data[aquila.sel, ]
+```
+
+```{r}
+ggplot(aquila, aes(time, magnitude)) +
+  geom_point() +
+  theme_bw()
+```
+
+# Data preparation to model fitting
+
+```{r}
+# set up data.frame for model fitting
+aquila.bru <- data.frame(
+  ts = as.numeric(
+    difftime(aquila$time, start.date, units = "days")
+  ),
+  magnitudes = aquila$magnitude,
+  idx.p = seq_len(nrow(aquila))
+)
+
+# set up list of initial values
+th.init <- list(
+  th.mu = inv.link.f$mu(0.5),
+  th.K = inv.link.f$K(0.1),
+  th.alpha = inv.link.f$alpha(1),
+  th.c = inv.link.f$c_(0.1),
+  th.p = inv.link.f$p(1.1)
+)
+```
+
+```{r}
+# set up list of bru options
+bru.opt.list <- list(
+  bru_verbose = 3, # type of visual output
+  bru_max_iter = 70, # maximum number of iterations
+  # bru_method = list(max_step = 0.5),
+  bru_initial = th.init # parameters' initial values
+)
+```
+
+# Model fitting
+
+```{r}
+# set starting and time of the time interval used for model fitting. In this
+# case, we use the interval covered by the data.
+T1 <- 0
+# Use max(..., na.rm = TRUE) if there may still be NAs here
+T2 <- max(aquila.bru$ts) + 0.2
+# fit the model
+aquila.fit <- Temporal.ETAS(
+  total.data = aquila.bru,
+  M0 = M0,
+  T1 = T1,
+  T2 = T2,
+  link.functions = link.f,
+  coef.t. = 1,
+  delta.t. = 0.1,
+  N.max. = 5,
+  bru.opt = bru.opt.list
+)
+```
+
+# Create input list
+
+```{r}
+# create input list to explore model output
+input_list <- list(
+  model.fit = aquila.fit,
+  link.functions = link.f
+)
+```
+
+# Check marginal posterior distributions
+
+```{r}
+# get marginal posterior information
+post.list <- get_posterior_param(input.list = input_list)
+
+# plot marginal posteriors
+post.list$post.plot
+```
+
+# Sample the joint posterior and make pair plot
+
+
+```{r}
+post.samp <- post_sampling(
+  input.list = input_list,
+  n.samp = 1000,
+  max.batch = 1000,
+  ncore = num.cores
+)
+
+head(post.samp)
+```
+
+```{r}
+pair.plot <- post_pairs_plot(
+  post.samp = post.samp,
+  input.list = NULL,
+  n.samp = NULL,
+  max.batch = 1000
+)
+pair.plot$pair.plot
+```
+
+# Check posterior number of events
+
+```{r}
+# set additional elements of the list
+input_list$T12 <- c(T1, T2)
+input_list$M0 <- M0
+input_list$catalog.bru <- aquila.bru
+```
+
+```{r}
+N.post <- get_posterior_N(input.list = input_list)
+N.post$post.plot
+```
+
+# Posterior of the triggering function and Omori law
+
+```{r}
+triggering_fun_plot(
+  input.list = input_list,
+  post.samp = post.samp,
+  n.samp = NULL, magnitude = 4,
+  t.end = 5, n.breaks = 100
+)
+```
+```{r}
+triggering_fun_plot_prior(
+  input.list = input_list,
+  magnitude = 4,
+  n.samp = 1000,
+  t.end = 10
+)
+```
+
+```{r}
+omori_plot_posterior(
+  input.list = input_list,
+  post.samp = post.samp,
+  n.samp = NULL,
+  t.end = 5
+)
+```
+```{r}
+omori_plot_prior(input.list = input_list, 
+                 n.samp = 1000, t.end = 5)
+```
+
+# Generate synthetic catalogues from model
+
+```{r}
+# maximum likelihood estimator for beta
+beta.p <- 1 / (mean(aquila.bru$magnitudes) - M0)
+```
+
+```{r}
+# synth.cat.list <- generate_temporal_ETAS_synthetic(
+#   theta = post.samp[1, ], # ETAS parameters
+#   beta.p = beta.p, # magnitude distribution parameter
+#   M0 = M0, # cutoff magnitude
+#   T1 = T1, # starting time
+#   T2 = T2, # end time
+#   Ht = aquila.bru[which.max(aquila.bru$magnitudes), ] # known events
+# )
+# # merge into unique data.frame
+# synth.cat.df <- do.call(rbind, synth.cat.list)
+# # order events by time
+# synth.cat.df <- synth.cat.df[order(synth.cat.df$ts), ]
+# 
+# ggplot(synth.cat.df, aes(ts, magnitudes, color = as.factor(gen))) +
+#   geom_point(size = 0.5)
+```
+
+```{r}
+# set.seed(2)
+# n.cat <- 8
+# # generate catalogues as list of lists
+# multi.synth.cat.list <- lapply(seq_len(n.cat), \(x) {
+#   generate_temporal_ETAS_synthetic(
+#     theta = post.samp[x, ],
+#     beta.p = beta.p,
+#     M0 = M0,
+#     T1 = T1,
+#     T2 = T2,
+#     Ht = aquila.bru[which.max(aquila.bru$magnitudes), ]
+#   )
+# })
+# 
+# # store catalogues as list of data.frames
+# multi.synth.cat.list.df <- lapply(multi.synth.cat.list, \(x) do.call(rbind, x))
+# # set catalogue identifier
+# multi.synth.cat.list.df <- lapply(
+#   seq_len(n.cat),
+#   \(x) {
+#     cbind(multi.synth.cat.list.df[[x]], cat.idx = x)
+#   }
+# )
+# # merge catalogues in unique data.frame
+# multi.synth.cat.df <- do.call(rbind, multi.synth.cat.list.df)
+# 
+# # we need to bing the synthetics with the observed catalogue for plotting
+# cat.df.for.plotting <- rbind(
+#   multi.synth.cat.df,
+#   cbind(aquila.bru[, c("ts", "magnitudes")],
+#     gen = NA,
+#     cat.idx = "observed"
+#   )
+# )
+# 
+# # plot them
+# ggplot(cat.df.for.plotting, aes(ts, magnitudes)) +
+#   geom_point(size = 0.5) +
+#   geom_point(
+#     data = aquila.bru[which.max(aquila.bru$magnitudes), ],
+#     mapping = aes(ts, magnitudes),
+#     color = "red"
+#   ) +
+#   facet_wrap(facets = ~cat.idx)
+```
+
+# Forecasting
+
+
+```{r}
+# # express 1 minute in days
+# min.in.days <- 1 / (24 * 60)
+# # find time of the event with the greatest magnitude
+# t.max.mag <- aquila.bru$ts[which.max(aquila.bru$magnitudes)]
+# # set starting time of the forecasting period
+# T1.fore <- t.max.mag + min.in.days
+# # set forecast length
+# fore.length <- 1
+# # set end time of the forecasting period
+# T2.fore <- T1.fore + fore.length
+# # set known data
+# Ht.fore <- aquila.bru[aquila.bru$ts < T1.fore, ]
+# 
+# # produce forecast
+# daily.fore <- Temporal.ETAS.forecast(
+#   post.samp = post.samp, # ETAS parameters posterior samples
+#   n.cat = nrow(post.samp), # number of synthetic catalogues
+#   beta.p = beta.p, # magnitude distribution parameter
+#   M0 = M0, # cutoff magnitude
+#   T1 = T1.fore, # forecast starting time
+#   T2 = T2.fore, # forecast end time
+#   Ht = Ht.fore, # known events
+#   ncore = num.cores
+# ) # number of cores
+```
+
+
+```{r}
+# # find number of events per catalogue
+# N.fore <- vapply(
+#   seq_len(daily.fore$n.cat),
+#   \(x) sum(daily.fore$fore.df$cat.idx == x), 0
+# )
+# # find number of observed events in the forecasting period
+# N.obs <- sum(aquila.bru$ts >= T1.fore & aquila.bru$ts <= T2.fore)
+# # plot the distribution
+# ggplot() +
+#   geom_histogram(aes(x = N.fore), binwidth = 1) 
+#   # geom_vline(xintercept = N.obs) +
+#   # xlim(100, 500)
+
+
+```
+
