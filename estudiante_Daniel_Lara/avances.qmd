@@ -21,7 +21,7 @@ library(patchwork)
 library(evd)
 
 # Cargar datos
-datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismos.rds")
+datos <- readRDS("D:\\TIC1\\input\\sismos.rds")
 
 # Formato de tiempo y ordenamiento
 datos <- datos %>%
