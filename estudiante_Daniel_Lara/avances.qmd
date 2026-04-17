@@ -1,0 +1,160 @@
+---
+title: "Análisis de Valores Extremos en Datos Sísmicos"
+author: "Tu Nombre"
+format: 
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+execute:
+  echo: true
+  warning: false
+  message: false
+---
+
+```{r}
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(lubridate)
+library(patchwork)
+library(evd)
+
+# Cargar datos
+datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismos.rds")
+
+# Formato de tiempo y ordenamiento
+datos <- datos %>%
+  mutate(time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
+  arrange(time)
+```
+
+### Análisis de Extremos: Máximos por Bloques (GEV)
+
+```{r}
+datos_extremos <- datos %>%
+  mutate(periodo = floor_date(time, "year")) %>% 
+  group_by(periodo) %>%
+  summarise(
+    minimo = min(magnitude, na.rm = TRUE),
+    media  = mean(magnitude, na.rm = TRUE),
+    maximo = max(magnitude, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  filter(!is.infinite(minimo) & !is.infinite(maximo))
+
+p1 <- ggplot(datos_extremos, aes(x = minimo)) +
+  geom_density(fill = "skyblue", alpha = 0.5) +
+  labs(title = "Mínimo Anual", x = "Valor", y = "Densidad") +
+  theme_minimal()
+
+p2 <- ggplot(datos_extremos, aes(x = media)) +
+  geom_density(fill = "lightgreen", alpha = 0.5) +
+  labs(title = "Media Anual", x = "Valor", y = "Densidad") +
+  theme_minimal()
+
+p3 <- ggplot(datos_extremos, aes(x = maximo)) +
+  geom_density(fill = "coral", alpha = 0.5) +
+  labs(title = "Máximo Anual", x = "Valor", y = "Densidad") +
+  theme_minimal()
+
+# Mostrar Densidades
+p1 + p2 + p3
+```
+
+#### Ajuste del Modelo GEV
+
+```{r}
+fit_max <- fgev(datos_extremos$maximo)
+
+# Parámetros del modelo GEV:
+fit_max$estimate
+```
+
+```{r, fig.width=10, fig.height=8, out.width="100%"}
+par(mfrow = c(2, 2))
+plot(fit_max) 
+par(mfrow = c(1, 1))
+```
+
+-   **Gráfico de Probabilidades (P-Plot):** Podemos notar que las probabilidades reales se llegan a adaptar bien a las teóricas predichas por el modelo GEV.
+
+-   **Gráfico de Cuantiles (Q-Plot):** Las magnitudes van de 6 a 9, notamos que ajusta bien los valores más probables, sin embargo, en los extremos predichos ya se alejan de los datos reales y aumenta la incertidumbre.
+
+-   **Nivel de Retorno:** Nos muestra que los sismos entre 6 a 7.5 ocurren en periodos de 0.5 a 5 años; sin embargo, los sismos de magnitud 8, por ejemplo, ocurren cada 50 años.
+
+Máxima de estabilidad por los hablado anteriomente, los datos se llegan a ajustar bien a un modelo GEV, por lo tanto, decimos que es la única distribución de los datos que es máxima estable Extremal Types Theorem y dado que el valor de $\xi_i<0$, estamos en una GEV reversed Weibull
+
+### Análisis de Picos sobre el Umbral (POT)
+
+```{r}
+# Gráfico de Vida Media Remanente
+mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
+
+# Gráfico de elección de umbral (tcplot)
+limites_umbral <- quantile(datos$magnitude, probs = c(0.50, 0.95))
+
+
+tcplot(datos$magnitude, tlim=limites_umbral)
+
+```
+
+Se toma un umbral entre 5.5 a 6\
+Se evidencia posiblemente que el parámetro $\xi <0$ mostrando que las colas serán ligeras con un límite máximo
+
+### Ajuste de Modelos de Excedencia (Procesos Puntuales / GPD)
+
+#### Parámetros iniciales aleatorios
+
+```{r}
+fit_rd <- fpot(datos$magnitude, threshold=5.8, model="pp", 
+               start=list(loc=10, scale=1, shape=0.1), npp=365.25*24)
+fit_rd$estimate
+fit_rd$std.err
+
+par(mfrow=c(2,2))
+plot(fit_rd)
+par(mfrow=c(1,1))
+```
+
+#### Con parámetros iniciales obtenidos del ajuste GEV previo:
+
+```{r, fig.width=10, fig.height=8, out.width="100%"}
+p_egv <- fit_max$estimate
+fit_ex <- fpot(datos$magnitude, threshold=5.8, model="pp", 
+               start=as.list(p_egv), npp=365.25*24)
+fit_ex$estimate
+fit_ex$std.err
+
+par(mfrow=c(2,2))
+plot(fit_ex)
+par(mfrow=c(1,1))
+```
+
+#### Sin parámetros iniciales (modelo estándar GPD)
+
+```{r, fig.width=10, fig.height=8, out.width="100%"}
+fit_np <- fpot(datos$magnitude, threshold = 5.8)
+fit_np$estimate
+fit_np$std.err
+
+par(mfrow=c(2,2))
+plot(fit_np)
+par(mfrow=c(1,1))
+```
+
+### Diagnóstico del Proceso de Poisson
+
+```{r}
+indices_excedencias <- which(datos$magnitude > 5.8)
+tiempos_llegada <- diff(indices_excedencias)
+
+qqplot(qexp(ppoints(length(tiempos_llegada))), tiempos_llegada,
+       main = "Diagnóstico de Poisson: Tiempos \nentre Sismos Extremos",
+       xlab = "Cuantiles Teóricos Exponenciales",
+       ylab = "Tiempo Observado entre \nExcedencias (Índices)",
+       pch = 20, col = "blue")
+
+# Añadir la línea de referencia
+qqline(tiempos_llegada, distribution = qexp, col = "red", lwd = 2)
+```
