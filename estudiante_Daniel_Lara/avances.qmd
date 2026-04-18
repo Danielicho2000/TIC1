@@ -21,7 +21,7 @@ library(patchwork)
 library(evd)
 
 # Cargar datos
-datos <- readRDS("D:\\TIC1\\input\\sismos.rds")
+datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismos.rds")
 
 # Formato de tiempo y ordenamiento
 datos <- datos %>%
@@ -157,4 +157,51 @@ qqplot(qexp(ppoints(length(tiempos_llegada))), tiempos_llegada,
 
 # Añadir la línea de referencia
 qqline(tiempos_llegada, distribution = qexp, col = "red", lwd = 2)
+```
+
+### Las r observaciones más grandes
+
+Cómo definimos el ancho de cada bloque? Cómo definirlo en función del umbral (u)
+
+Definiré el r como:
+
+$$
+r \sim \frac{\text{\# de sismos que superar el umbral u}}{\text{Número total de bloques (años?)}}
+$$
+
+```{r}
+num<-sum(datos$magnitude>=5.8, na.rm = TRUE)
+den<-length(unique(year(datos$time)))
+r<-trunc(num/den)
+```
+
+```{r}
+bloques<-datos%>%
+  mutate(year=year(time))%>%
+  group_by(year)%>%
+  slice_max(order_by = magnitude, n=r, with_ties = FALSE)%>%
+  mutate(r_orden=paste0("orden_",row_number()))%>%
+  ungroup()
+matriz <- bloques %>%
+  select(year, r_orden, magnitude) %>%
+  pivot_wider(names_from = r_orden, 
+              values_from = magnitude)%>%
+  select(-year)
+
+num_p<-as.numeric(unlist(matriz))
+datos_matriz<-matrix(num_p,
+                     nrow=nrow(matriz),
+                     ncol=ncol(matriz))
+```
+
+```{r}
+fit_r<-rlarg.fit(datos_matriz, r=2)
+
+
+```
+
+```{r}
+par(mfrow=c(2,2))
+rlarg.diag(fit_r)
+par(mfrow=c(1,1))
 ```

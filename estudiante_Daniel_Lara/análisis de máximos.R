@@ -57,4 +57,50 @@ par(mfrow = c(1, 1))
 #por los hablado anteriomente, los datos se llegan a ajustar bien a un modelo GEV, por lo tanto, decimos que es la única distribución de los datos que es máxima estable
 # Extremal Types Theorem
 #y dado que el valor de xi<0, estamos en una GEV reversed  Weibull
+
+mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
+limites_umbral <- quantile(datos$magnitude, probs = c(0.50, 0.95))
+par(mfrow=c(2,1))
+tcplot(datos$magnitude, tlim=limites_umbral)
+par(mfrow=c(1,1))
+################################################################################
+
+##Excedencias
+#parámetros iniciales loc, scale, shape aleatorios
+fit_rd<-fpot(datos$magnitude,threshold=5.8, model="pp", start=list(loc=10,scale=1,shape=0.1),
+             npp=365.25*24)
+fit_rd$estimate
+fit_rd$std.err
+par(mfrow=c(2,2))
+plot(fit_rd)
+par(mfrow=c(1,1))
      
+#parámetros iniciales loc, scale, shape obtenidos por EGV
+p_egv<-fit_max$estimate
+fit_ex<-fpot(datos$magnitude,threshold=5.8, model="pp", start=as.list(p_egv),
+             npp=365.25*24)
+fit_ex$estimate
+fit_ex$std.err
+par(mfrow=c(2,2))
+plot(fit_ex)
+par(mfrow=c(1,1))
+
+#sin parámetros iniciales y modelo="gdp"
+fit_np<-fpot(datos$magnitude, threshold = 5.8)
+fit_np$estimate
+fit_np$std.err
+par(mfrow=c(2,2))
+plot(fit_np)
+par(mfrow=c(1,1))
+
+#PPP
+indices_excedencias <- which(datos$magnitude > 5.8)
+tiempos_llegada <- diff(indices_excedencias)
+qqplot(qexp(ppoints(length(tiempos_llegada))), tiempos_llegada,
+       main = "Diagnóstico de Poisson: Tiempos entre Sismos Extremos",
+       xlab = "Cuantiles Teóricos Exponenciales",
+       ylab = "Tiempo Observado entre Excedencias (Índices)",
+       pch = 19, col = "blue")
+
+# 4. Añadir la línea de referencia
+qqline(tiempos_llegada, distribution = qexp, col = "red", lwd = 2)
