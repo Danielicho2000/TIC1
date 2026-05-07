@@ -1,6 +1,6 @@
 ---
 title: "Análisis de Valores Extremos en Datos Sísmicos"
-author: "Tu Nombre"
+author: "Daniel Lara "
 format: 
   pdf:
     toc: true
@@ -12,21 +12,29 @@ execute:
   message: false
 ---
 
-```{r}
+```{r, warning=FALSE}
+# Carga de librerías
 library(tidyverse)
 library(sf)
 library(ggplot2)
 library(lubridate)
 library(patchwork)
 library(evd)
+library(ismev)
+library(evgam)
+library(mgcv)
+library(tseries)
+library(extRemes)
 
 # Cargar datos
-datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismos.rds")
+datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismicevents.rds")
 
-# Formato de tiempo y ordenamiento
 datos <- datos %>%
+  st_drop_geometry() %>%
   mutate(time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
   arrange(time)
+
+
 ```
 
 ### Análisis de Extremos: Máximos por Bloques (GEV)
@@ -77,11 +85,11 @@ plot(fit_max)
 par(mfrow = c(1, 1))
 ```
 
--   **Gráfico de Probabilidades (P-Plot):** Podemos notar que las probabilidades reales se llegan a adaptar bien a las teóricas predichas por el modelo GEV.
+- **Gráfico de Probabilidades (P-Plot):** Podemos notar que las probabilidades reales se llegan a adaptar bien a las teóricas predichas por el modelo GEV.
 
--   **Gráfico de Cuantiles (Q-Plot):** Las magnitudes van de 6 a 9, notamos que ajusta bien los valores más probables, sin embargo, en los extremos predichos ya se alejan de los datos reales y aumenta la incertidumbre.
+- **Gráfico de Cuantiles (Q-Plot):** Las magnitudes van de 6 a 9, notamos que ajusta bien los valores más probables, sin embargo, en los extremos predichos ya se alejan de los datos reales y aumenta la incertidumbre.
 
--   **Nivel de Retorno:** Nos muestra que los sismos entre 6 a 7.5 ocurren en periodos de 0.5 a 5 años; sin embargo, los sismos de magnitud 8, por ejemplo, ocurren cada 50 años.
+- **Nivel de Retorno:** Nos muestra que los sismos entre 6 a 7.5 ocurren en periodos de 0.5 a 5 años; sin embargo, los sismos de magnitud 8, por ejemplo, ocurren cada 50 años.
 
 Máxima de estabilidad por los hablado anteriomente, los datos se llegan a ajustar bien a un modelo GEV, por lo tanto, decimos que es la única distribución de los datos que es máxima estable Extremal Types Theorem y dado que el valor de $\xi_i<0$, estamos en una GEV reversed Weibull
 
@@ -90,13 +98,10 @@ Máxima de estabilidad por los hablado anteriomente, los datos se llegan a ajust
 ```{r}
 # Gráfico de Vida Media Remanente
 mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
-
 # Gráfico de elección de umbral (tcplot)
-limites_umbral <- quantile(datos$magnitude, probs = c(0.50, 0.95))
-
-
+limites_umbral <- quantile(datos$magnitude, probs = c(0.05, 0.95))
 tcplot(datos$magnitude, tlim=limites_umbral)
-
+UMBRAL <- 5.8
 ```
 
 Se toma un umbral entre 5.5 a 6\
@@ -112,10 +117,11 @@ fit_rd <- fpot(datos$magnitude, threshold=5.8, model="pp",
 fit_rd$estimate
 fit_rd$std.err
 
-par(mfrow=c(2,2))
+par(mfrow=c(2,2), mar=c(4,4,2,1)) 
 plot(fit_rd)
-par(mfrow=c(1,1))
 ```
+
+El npp es correcto porque son una recopilación horaria por cada día del año
 
 #### Con parámetros iniciales obtenidos del ajuste GEV previo:
 
@@ -143,21 +149,86 @@ plot(fit_np)
 par(mfrow=c(1,1))
 ```
 
-### Diagnóstico del Proceso de Poisson
+### Diagnóstico de Independencia y Declustering
+
+#### Prueba de Independencia
 
 ```{r}
-indices_excedencias <- which(datos$magnitude > 5.8)
-tiempos_llegada <- diff(indices_excedencias)
+excedencias_binarias <- as.numeric(datos$magnitude > UMBRAL)
+#H0: son independientes los sismos
+runs_test <- runs.test(factor(excedencias_binarias))
 
-qqplot(qexp(ppoints(length(tiempos_llegada))), tiempos_llegada,
-       main = "Diagnóstico de Poisson: Tiempos \nentre Sismos Extremos",
-       xlab = "Cuantiles Teóricos Exponenciales",
-       ylab = "Tiempo Observado entre \nExcedencias (Índices)",
-       pch = 20, col = "blue")
+cat("=== PRUEBA DE RACHAS PARA INDEPENDENCIA ===\n")
+cat("Estadístico:", round(runs_test$statistic, 4), "\n")
+cat("p-valor:", round(runs_test$p.value, 4), "\n\n")
+#<0.05 se rechaza la hipotesis nula
 
-# Añadir la línea de referencia
-qqline(tiempos_llegada, distribution = qexp, col = "red", lwd = 2)
 ```
+
+```{r}
+# Filtrar excedencias para declustering
+excedencias <- datos %>%
+  filter(magnitude > UMBRAL) %>%
+  arrange(time)
+
+# Aplicar declustering por método de rachas
+dl_object <- decluster(
+  x = excedencias$magnitude,
+  threshold = UMBRAL,
+  method = "runs",
+  r = 3  # Número de observaciones bajo el umbral para cerrar un cluster
+)
+
+# Crear dataset con eventos declusterizados
+excedencias <- excedencias %>%
+  mutate(
+    cluster_id = dl_object,
+    es_evento_principal = !is.na(cluster_id)
+  )
+
+# Separar datasets
+excedencias_original <- excedencias  # Todos los eventos
+excedencias_declust <- excedencias %>%
+  filter(es_evento_principal == TRUE)  # Solo eventos principales
+
+cat("Número de eventos después del declustering:", nrow(excedencias_declust), "\n")
+```
+
+#### Diágnostico del PP
+
+```{r}
+
+
+# Diagnóstico PRE-declustering
+tiempos_pre <- diff(as.numeric(excedencias_original$time)) / (3600 * 24)
+
+qqplot(
+  qexp(ppoints(length(tiempos_pre))),
+  tiempos_pre,
+  main = "Pre-Declustering",
+  xlab = "Cuantiles Teóricos Exponenciales",
+  ylab = "Días entre Excedencias",
+  pch = 20, col = "blue", cex = 0.5
+)
+qqline(tiempos_pre, distribution = qexp, col = "red", lwd = 2)
+
+# Diagnóstico POST-declustering
+tiempos_post <- diff(as.numeric(excedencias_declust$time)) / (3600 * 24)
+
+qqplot(
+  qexp(ppoints(length(tiempos_post))),
+  tiempos_post,
+  main = "Post-Declustering",
+  xlab = "Cuantiles Teóricos Exponenciales",
+  ylab = "Días entre Eventos Principales",
+  pch = 20, col = "darkgreen", cex = 0.5
+)
+qqline(tiempos_post, distribution = qexp, col = "red", lwd = 2)
+
+
+```
+
+por qué se abren los IC? si ya eliminamos las replicas
 
 ### Las r observaciones más grandes
 
@@ -165,43 +236,186 @@ Cómo definimos el ancho de cada bloque? Cómo definirlo en función del umbral 
 
 Definiré el r como:
 
-$$
-r \sim \frac{\text{\# de sismos que superar el umbral u}}{\text{Número total de bloques (años?)}}
-$$
+$$r \sim \frac{\text{\# de sismos que superar el umbral u}}{\text{Número total de bloques (años?)}}$$
 
 ```{r}
-num<-sum(datos$magnitude>=5.8, na.rm = TRUE)
-den<-length(unique(year(datos$time)))
-r<-trunc(num/den)
-```
+num_exc <- sum(datos$magnitude >= UMBRAL, na.rm = TRUE)
+num_anios <- length(unique(year(datos$time)))
+r_optimo <- trunc(num_exc / num_anios)
 
-```{r}
-bloques<-datos%>%
-  mutate(year=year(time))%>%
-  group_by(year)%>%
-  slice_max(order_by = magnitude, n=r, with_ties = FALSE)%>%
-  mutate(r_orden=paste0("orden_",row_number()))%>%
+cat("Número de excedencias totales:", num_exc, "\n")
+cat("Número de años:", num_anios, "\n")
+cat("r óptimo calculado:", r_optimo, "\n")
+
+# Preparar matriz para r-largest
+bloques <- datos %>%
+  mutate(year = year(time)) %>%
+  group_by(year) %>%
+  filter(n() >= r_optimo) %>%
+  slice_max(order_by = magnitude, n = r_optimo, with_ties = FALSE) %>%
+  mutate(r_orden = row_number()) %>%
   ungroup()
-matriz <- bloques %>%
+
+# Crear matriz en formato wide
+matriz_r <- bloques %>%
   select(year, r_orden, magnitude) %>%
-  pivot_wider(names_from = r_orden, 
-              values_from = magnitude)%>%
-  select(-year)
+  pivot_wider(
+    names_from = r_orden,
+    values_from = magnitude,
+    names_prefix = "r_"
+  ) %>%
+  select(-year) %>%
+  as.matrix()
 
-num_p<-as.numeric(unlist(matriz))
-datos_matriz<-matrix(num_p,
-                     nrow=nrow(matriz),
-                     ncol=ncol(matriz))
+cat("Número de bloques (años):", nrow(matriz_r), "\n")
+cat("Número de observaciones por bloque:", ncol(matriz_r), "\n")
+```
+
+```{r, results='hide'}
+# Ajuste de modelos r-largest y comparación
+resultados_r <- data.frame(
+  Modelo = character(),
+  r = integer(),
+  NLLH = numeric(),
+  AIC = numeric(),
+  Convergencia = integer(),
+  stringsAsFactors = FALSE
+)
+
+for(i in 2:min(7, ncol(matriz_r))) {
+  fit_temp <- try(rlarg.fit(matriz_r[, 1:i, drop = FALSE]), silent = TRUE)
+  
+  if (!inherits(fit_temp, "try-error") && fit_temp$conv == 0) {
+    aic_temp <- 2 * fit_temp$nllh + 2 * length(fit_temp$mle)
+    resultados_r <- rbind(resultados_r, data.frame(
+      Modelo = paste("r-largest (r =", i, ")"),
+      r = i,
+      NLLH = round(fit_temp$nllh, 2),
+      AIC = round(aic_temp, 2),
+      Convergencia = fit_temp$conv,
+      stringsAsFactors = FALSE
+    ))
+  }
+}
+
+
 ```
 
 ```{r}
-fit_r<-rlarg.fit(datos_matriz, r=2)
+# Ordenar por AIC
+resultados_r <- resultados_r[order(resultados_r$AIC), ]
+cat("\n=== TABLA COMPARATIVA MODELOS r-largest ===\n")
+print(resultados_r, row.names = FALSE)
 
+# Identificar mejor modelo
+mejor_r <- resultados_r$r[1]
+cat("\nMejor modelo: r =", mejor_r, "con AIC =", resultados_r$AIC[1], "\n")
+invisible(capture.output({
+  fit_mejor <- rlarg.fit(matriz_r[, 1:mejor_r, drop = FALSE])
+}))
 
+cat("=== PARÁMETROS ESTIMADOS DEL MEJOR MODELO ===\n\n")
+print(round(fit_mejor$mle, 4))
+cat("\nErrores estándar:\n")
+print(round(fit_mejor$se, 4))
+```
+
+### Ajuste de parámetros con covariables
+
+EVGAM busca estimar los parámetros $\mu, \sigma, \xi$ por medio de combinaciones lineales con funciones llamadas B-splines que dependen de covariables (tiempo, magnitud, etc)
+
+$$\mu(t)=\sum_{j=1}^{k}\beta_jb_j(t)$$
+
+- $b_j(t)$ son las funciones base para estimar la función suave que describe la tendencia
+
+- $B_j$ parámetros libres que ajustan la Máxima Verosimilitud Penalizada (la forma como ajusta los parámetros)
+
+Y trata de acercar los parámetros maximizando la log-verosimilitud penalizada
+
+$$L_{p}(\beta)=l(\beta)- \frac{1}{2}  \sum_{j} \lambda_j  \beta^{\top} S_j \beta $$
+
+- $l(\beta)$: Es la log-verosimilitud convencional (la bondad de ajuste).
+
+- $\lambda_j$: Es el **parámetro de suavizado** (smoothing parameter). Es la perilla que controla qué tanto castigamos la falta de suavidad. (grande muy suave, pequeño curva muy flexible, tal vez sobreajustada)
+
+- $ \beta^\top S_j \beta $: Es una medida de la "curvatura" o rugosidad de la función. Si la línea sube y baja bruscamente, este término es muy grande.
+
+#### Preparación de datos
+
+```{r}
+excedencias_evgam <- excedencias_declust %>%
+  mutate(
+    excess = magnitude - UMBRAL,
+    year_decimal = year(time) + (yday(time) / 365.25),
+    time_days = as.numeric(difftime(time, min(time), units = "days"))
+  ) %>%
+  as.data.frame()
+```
+
+Se toma la diferencia con el mínimo para tener un tiempo inicial dentro de los datos que exceden el umbral
+
+#### Modelo 0
+
+```{r}
+fit_evgam0 <- evgam(
+  formula = list(excess ~ 1, ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+
+cat("=== MODELO 0: GPD ESTACIONARIO ===\n")
+summary(fit_evgam0)
 ```
 
 ```{r}
-par(mfrow=c(2,2))
-rlarg.diag(fit_r)
-par(mfrow=c(1,1))
+pred_par <- predict(fit_evgam0, type = "response")
+sigma_hat <- as.numeric(pred_par[, 1])
+xi_hat    <- as.numeric(pred_par[, 2])
+y         <- as.numeric(excedencias_evgam$excess)
+# Empirical probabilities
+p <- ppoints(length(y))
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat) > 1e-8,
+  sigma_hat / xi_hat * ((1 - p)^(-xi_hat) - 1),
+  -sigma_hat * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+por qué se abren los intervalos?
+
+#### Modelo 1: Tendencia temporal en la escala (\$\\sigma\$)
+
+fit_1
+
+```{r}
+fit_evgam1 <- evgam(
+  formula = list(excess ~ s(year_decimal, bs = "cs"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+pred_par1 <- predict(fit_evgam1, type = "response")
+sigma_hat1 <- as.numeric(pred_par1[, 1])
+xi_hat1    <- as.numeric(pred_par1[, 2])
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat1) > 1e-8,
+  sigma_hat1 / xi_hat1 * ((1 - p)^(-xi_hat1) - 1),
+  -sigma_hat1 * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
 ```
