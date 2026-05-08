@@ -7,7 +7,7 @@ format:
     number-sections: true
     colorlinks: true
 execute:
-  echo: true
+  echo: false
   warning: false
   message: false
 ---
@@ -338,7 +338,15 @@ $$L_{p}(\beta)=l(\beta)- \frac{1}{2}  \sum_{j} \lambda_j  \beta^{\top} S_j \beta
 
 - $\lambda_j$: Es el **parámetro de suavizado** (smoothing parameter). Es la perilla que controla qué tanto castigamos la falta de suavidad. (grande muy suave, pequeño curva muy flexible, tal vez sobreajustada)
 
-- $ \beta^\top S_j \beta $: Es una medida de la "curvatura" o rugosidad de la función. Si la línea sube y baja bruscamente, este término es muy grande.
+- \$ \beta\^\top S_j \beta \$: Es una medida de la "curvatura" o rugosidad de la función. Si la línea sube y baja bruscamente, este término es muy grande.
+
+Dentro de la formula para el uso del modelo EVGAM tenemos tres tipo de interacciones de las covariables
+
+- $s(x)+s(y)$ Los efectos de x,y son independientes
+
+- $te(x,y)$ existe interacción completa entre x,y
+
+- $ti(x,y)$ cuantifica la interacción pura (se la complementa por ejemplo con $s(x)+s(y)$)
 
 #### Preparación de datos
 
@@ -392,8 +400,6 @@ por qué se abren los intervalos?
 
 #### Modelo 1: Tendencia temporal en la escala (\$\\sigma\$)
 
-fit_1
-
 ```{r}
 fit_evgam1 <- evgam(
   formula = list(excess ~ s(year_decimal, bs = "cs"), ~ 1),
@@ -418,4 +424,47 @@ qqplot(q_theo, y,
        xlab = "Theoretical",
        ylab = "Observed")
 abline(0, 1, col = "red")
+```
+
+```{r}
+cat("=== MODELO 1:  Tendencia temporal en la escala ===\n")
+summary(fit_evgam1)
+```
+
+Lo que se puede rescatar aquí es el s(year_decimal) donde la escala $\sigma_t$ fue cambiando a lo largo del tiempo de formas drásticas, se evidencia por los grádos de liberdas efectivos cercanos a 5 (miden la complejidad real de una curva suave ajustada).
+
+El valor promedio de $\sigma_t$ es cercano a 0, lo que podría indicar que las excedencias son más predecibles
+
+```{r}
+plot(fit_evgam1, pages = 1, 
+        main = "Tendencia temporal en log(σ)",
+        xlab = "Año", 
+        ylab = "s(year_decimal)",
+        se = TRUE,           # Bandas de confianza
+        shade = TRUE)        # Sombrear incertidumbre
+```
+
+Son los valores que aumentarán la varianza promedio a lo largo del tiempo, se los puede predecir y ver como irá cambiando la varianza\\
+
+$$log(\sigma_t) = -0.57 + s(\text{year\_decimal})$$
+
+```{r}
+anios_pred <- seq(min(excedencias_evgam$year_decimal), 
+                   max(excedencias_evgam$year_decimal), 
+                   by = 0.5)
+pred_sigma <- predict(fit_evgam1, 
+                      newdata = data.frame(year_decimal = anios_pred),
+                      type = "response") #log(\sigma_t) = -0.57 + s(\text{year_decimal})
+
+# Convertir a escala original
+sigma_estimado <- exp(pred_sigma[, 1])  # sigma en escala original
+
+# Crear tabla interpretable
+tabla_sigma <- data.frame(
+  Año = anios_pred,
+  Sigma = sigma_estimado,
+  Magnitud_Típica = 5.8 + sigma_estimado  # Magnitud esperada sobre umbral
+)
+
+tail(tabla_sigma)
 ```
