@@ -25,6 +25,8 @@ library(evgam)
 library(mgcv)
 library(tseries)
 library(extRemes)
+library(scales)
+library(geosphere)
 
 # Cargar datos
 datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismicevents.rds")
@@ -34,7 +36,114 @@ datos <- datos %>%
   mutate(time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
   arrange(time)
 
+#dim 274602 x 8
+```
 
+### La Ley de Gutenberg-Richter (G-R)
+
+$$log_{10}N(M)=a-bM$$
+
+- $N(M)$ es el número acumulado de sismos con una magnitud mayor o igual a $M$.
+
+- $a$ es una constante que indica la tasa de sismicidad total de la región (un valor más alto significa mayor actividad sísmica general).
+
+- $b$ (conocido como el *b-value*) es una constante que describe la proporción entre sismos pequeños y grandes.
+
+La de Gutenber-Ritcher dicta que los datos deberían formar una línea recta perfecta.
+
+```{r}
+estimar_mc_maxc <- function(magnitudes, bin_width = 0.1, correccion = 0.2) {
+  
+  # 1. Agrupar las magnitudes en bins (ej. 2.1, 2.2, 2.3)
+  frecuencias <- magnitudes %>%
+    enframe(name = NULL, value = "mag") %>%
+    mutate(mag_bin = round(mag / bin_width) * bin_width) %>%
+    count(mag_bin, name = "frecuencia") %>%
+    arrange(mag_bin)
+  
+  # 2. Encontrar el bin con la frecuencia máxima (el pico de la curva)
+  mc_bruto <- frecuencias %>%
+    filter(frecuencia == max(frecuencia)) %>%
+    pull(mag_bin) %>%
+    min() # Usamos min() en caso de que haya un empate en el pico
+  
+  # 3. Aplicar corrección de seguridad recomendada en la literatura
+  mc_estimado <- mc_bruto + correccion
+  
+  return(mc_estimado)
+}
+
+# --- Aplicación a tus datos ---
+
+# 1. Estimar el umbral
+umbral_mc <- estimar_mc_maxc(datos$magnitude)
+```
+
+```{r}
+graficar_gr <- function(magnitudes, bin_width = 0.1, mc = NULL) {
+  
+  # 1. Preparar los datos: calcular frecuencias no acumuladas y acumuladas
+  df_frecuencias <- tibble(mag = magnitudes) %>%
+    # Agrupar en intervalos (bins)
+    mutate(mag_bin = round(mag / bin_width) * bin_width) %>%
+    # Contar la frecuencia no acumulada en cada bin
+    count(mag_bin, name = "frec_no_acumulada") %>%
+    # Ordenar de mayor a menor magnitud para calcular la acumulada correctamente
+    arrange(desc(mag_bin)) %>%
+    mutate(frec_acumulada = cumsum(frec_no_acumulada)) %>%
+    # Volver a ordenar de menor a mayor para el gráfico
+    arrange(mag_bin)
+  
+  # 2. Construir el gráfico con ggplot2
+  p <- ggplot(df_frecuencias) +
+    
+    # Puntos de frecuencia no acumulada (suele graficarse en gris o con círculos vacíos)
+    geom_point(aes(x = mag_bin, y = frec_no_acumulada), 
+               color = "gray50", shape = 1, size = 2) +
+    
+    # Puntos de frecuencia acumulada (la verdadera relación Gutenberg-Richter)
+    geom_point(aes(x = mag_bin, y = frec_acumulada), 
+               color = "darkblue", shape = 16, size = 2) +
+    
+    # Transformar el eje Y a escala logarítmica (base 10)
+    scale_y_log10(
+      breaks = trans_breaks("log10", function(x) 10^x),
+      labels = trans_format("log10", math_format(10^.x))
+    ) +
+    
+    # Etiquetas y diseño
+    labs(
+      title = "Ley de Gutenberg-Richter",
+      subtitle = "Distribución de Frecuencia-Magnitud (FMD)",
+      x = "Magnitud (M)",
+      y = expression(log[10] ~ N)
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      axis.title = element_text(face = "bold")
+    )
+  
+  # 3. Añadir una línea vertical para Mc si el usuario provee el valor
+  if (!is.null(mc)) {
+    p <- p + 
+      geom_vline(xintercept = mc, color = "red", linetype = "dashed", size = 0.8) +
+      annotate("text", x = mc + 0.1, y = max(df_frecuencias$frec_acumulada), 
+               label = paste("Mc =", mc), color = "red", hjust = 0, fontface = "bold")
+  }
+  
+  return(p)
+}
+```
+
+```{r}
+graficar_gr(datos$magnitude, mc=umbral_mc)
+```
+
+A partir del valor mínimo de $M_c$ (magnitud de completitud), la ley de G-R se aproxima a cumplirse, por ende, se debe trabajar con los datos por encima de de este valor. Logrando que se garantice el supuesto de Poisson y será más práctica la implementación de los modelos.
+
+```{r}
+datos<-datos%>%filter(magnitude>=umbral_mc)
 ```
 
 ### Análisis de Extremos: Máximos por Bloques (GEV)
@@ -53,22 +162,192 @@ datos_extremos <- datos %>%
 
 p1 <- ggplot(datos_extremos, aes(x = minimo)) +
   geom_density(fill = "skyblue", alpha = 0.5) +
-  labs(title = "Mínimo Anual", x = "Valor", y = "Densidad") +
+  labs(title = "Mínimo diarios", x = "Valor", y = "Densidad") +
   theme_minimal()
 
 p2 <- ggplot(datos_extremos, aes(x = media)) +
   geom_density(fill = "lightgreen", alpha = 0.5) +
-  labs(title = "Media Anual", x = "Valor", y = "Densidad") +
+  labs(title = "Media diario", x = "Valor", y = "Densidad") +
   theme_minimal()
 
 p3 <- ggplot(datos_extremos, aes(x = maximo)) +
   geom_density(fill = "coral", alpha = 0.5) +
-  labs(title = "Máximo Anual", x = "Valor", y = "Densidad") +
+  labs(title = "Máximo diario", x = "Valor", y = "Densidad") +
   theme_minimal()
 
 # Mostrar Densidades
 p1 + p2 + p3
+
+rm(list=c(paste0("p",1:3)))
 ```
+
+- **Gráfico de Probabilidades (P-Plot):** Podemos notar que las probabilidades reales se llegan a adaptar bien a las teóricas predichas por el modelo GEV.
+
+- **Gráfico de Cuantiles (Q-Plot):** Las magnitudes van de 6 a 9, notamos que ajusta bien los valores más probables, sin embargo, en los extremos predichos ya se alejan de los datos reales y aumenta la incertidumbre.
+
+- **Nivel de Retorno:** Nos muestra que los sismos entre 6 a 7.5 ocurren en periodos de 0.5 a 5 años; sin embargo, los sismos de magnitud 8, por ejemplo, ocurren cada 50 años.
+
+Máxima de estabilidad por los hablado anteriomente, los datos se llegan a ajustar bien a un modelo GEV, por lo tanto, decimos que es la única distribución de los datos que es máxima estable Extremal Types Theorem y dado que el valor de $\xi_i>0$, estamos en una GEV......................................
+
+### Análisis de Picos sobre el Umbral (POT)
+
+```{r}
+# Gráfico de Vida Media Remanente
+mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
+# Gráfico de elección de umbral (tcplot)
+ limites_umbral <- quantile(datos$magnitude, probs = c(0.05, 0.95))
+ tcplot(datos$magnitude, tlim=limites_umbral)
+
+```
+
+Se toma un umbral entre 5 a 6, se tomará el valor de $\mu=5$\
+Se evidencia posiblemente que el parámetro $\xi>0$ mostrando que las colas serán ligeras con un límite máximo
+
+### Diagnóstico de Independencia y Declustering
+
+#### Prueba de Independencia
+
+```{r}
+excedencias_binarias <- as.numeric(datos$magnitude > 5)
+#H0: son independientes los sismos
+runs_test <- runs.test(factor(excedencias_binarias))
+
+cat("=== PRUEBA DE RACHAS PARA INDEPENDENCIA ===\n")
+cat("Estadístico:", round(runs_test$statistic, 4), "\n")
+cat("p-valor:", round(runs_test$p.value, 4), "\n\n")
+#<0.05 se rechaza la hipotesis nula
+
+```
+
+#### Declustering
+
+```{r}
+# 1. Definir las leyes de escala para las ventanas empíricas
+# Nota: Estas son las ecuaciones generales de Uhrhammer (1986). 
+# D(M) en km, T(M) en días.
+calc_dist_window <- function(m) { exp(-1.024 + 0.804 * m) }
+calc_time_window <- function(m) { exp(-2.870 + 1.236 * m) }
+
+# 2. Preparar el catálogo (DEBE ser el catálogo completo, no solo los > 5)
+# Asumimos que tus columnas se llaman: time, lon, lat, magnitude
+catalogo_ordenado <- datos %>% 
+  # Ordenar de mayor a menor magnitud prioriza los sismos principales
+  arrange(desc(magnitude)) %>%
+  mutate(
+    is_mainshock = TRUE,
+    cluster_id = NA_integer_
+  )
+
+n_eventos <- nrow(catalogo_ordenado)
+
+for (i in 1:(n_eventos - 1)) {
+  # Si el evento ya fue marcado como réplica, lo saltamos
+  if (!catalogo_ordenado$is_mainshock[i]) next
+  
+  mainshock <- catalogo_ordenado[i, ]
+  
+  # Calcular el tamaño de la ventana
+  D_km <- calc_dist_window(mainshock$magnitude)
+  T_days <- calc_time_window(mainshock$magnitude)
+  
+  # Extraer índices de los candidatos a evaluar (solo los que siguen siendo mainshocks)
+  # Excluimos el evento actual (i)
+  candidates_idx <- which(catalogo_ordenado$is_mainshock)
+  candidates_idx <- candidates_idx[candidates_idx != i]
+  
+  if (length(candidates_idx) == 0) break
+  
+  # --- FILTRO 1: TIEMPO (Vectorizado) ---
+  # difftime puede aplicarse a vectores enteros de una vez
+  dt_days <- as.numeric(difftime(
+    catalogo_ordenado$time[candidates_idx], 
+    mainshock$time, 
+    units = "days"
+  ))
+  
+  # Solo nos interesan los eventos que ocurrieron DESPUÉS del mainshock y DENTRO de la ventana T
+  valid_time_mask <- (dt_days >= 0 & dt_days <= T_days)
+  
+  # Actualizar candidatos que pasaron el filtro de tiempo
+  candidates_idx <- candidates_idx[valid_time_mask]
+  
+  # Si no hay candidatos en esa ventana de tiempo, saltamos al siguiente mainshock
+  if (length(candidates_idx) == 0) next
+  
+  # --- FILTRO 2: ESPACIO (Vectorizado) ---
+  # distHaversine puede recibir una matriz de coordenadas
+  main_coord <- c(mainshock$lon, mainshock$lat)
+  cand_coords <- cbind(catalogo_ordenado$lon[candidates_idx], catalogo_ordenado$lat[candidates_idx])
+  
+  # Calculamos las distancias de un golpe
+  dists_km <- distHaversine(main_coord, cand_coords) / 1000
+  
+  # Identificar cuáles caen dentro del radio empírico
+  replicas_mask <- dists_km <= D_km
+  replicas_idx <- candidates_idx[replicas_mask]
+  
+  # --- ACTUALIZAR CATÁLOGO ---
+  # Asignamos FALSE a todas las réplicas encontradas de manera simultánea
+  if (length(replicas_idx) > 0) {
+    catalogo_ordenado$is_mainshock[replicas_idx] <- FALSE
+    catalogo_ordenado$cluster_id[replicas_idx] <- i
+  }
+}
+
+
+catalogo_limpio <- catalogo_ordenado %>%
+  filter(is_mainshock == TRUE) %>%
+  arrange(time)
+
+```
+
+```{r}
+rm("catalogo_ordenado")
+saveRDS(catalogo_limpio,"catalogo_limpio.rds")
+```
+
+```{r}
+# 1. Extraer ÚNICAMENTE los extremos (> 5) del catálogo limpio
+extremos_limpios <- catalogo_limpio %>% 
+  filter(magnitude > 5) %>% 
+  arrange(time)
+
+# 2. Calcular los tiempos entre eventos sucesivos (en días)
+# diff() resta la fila i+1 menos la fila i
+tiempos_entre_sismos <- as.numeric(diff(extremos_limpios$time))
+
+# --- PRUEBA 1: Autocorrelación Temporal (Test de Ljung-Box) ---
+# H0: Los tiempos entre eventos son independientes
+# Si p-valor > 0.05, confirmamos independencia temporal
+test_lb <- Box.test(tiempos_entre_sismos, type = "Ljung-Box")
+
+cat("=== PRUEBA DE LJUNG-BOX (INDEPENDENCIA TEMPORAL) ===\n")
+cat("Estadístico:", round(test_lb$statistic, 4), "\n")
+cat("p-valor:", round(test_lb$p.value, 4), "\n\n")
+
+```
+
+#### Diágnostico del PP
+
+```{r}
+# Diagnóstico PRE-declustering
+tiempos_pre <- diff(as.numeric(extremos_limpios$time)) / (3600 * 24)
+
+qqplot(
+  qexp(ppoints(length(tiempos_pre))),
+  tiempos_pre,
+  main = "post-Declustering",
+  xlab = "Cuantiles Teóricos Exponenciales",
+  ylab = "Días entre Excedencias",
+  pch = 20, col = "blue", cex = 0.5
+)
+qqline(tiempos_pre, distribution = qexp, col = "red", lwd = 2)
+
+```
+
+por qué se abren los IC? si ya eliminamos las replicas
+
+### Ajuste de Modelos de Excedencia (Procesos Puntuales / GPD)
 
 #### Ajuste del Modelo GEV
 
@@ -79,40 +358,16 @@ fit_max <- fgev(datos_extremos$maximo)
 fit_max$estimate
 ```
 
-```{r, fig.width=10, fig.height=8, out.width="100%"}
-par(mfrow = c(2, 2))
-plot(fit_max) 
+```{r}
+par(mfrow = c(2, 2)) 
+plot(fit_max)
 par(mfrow = c(1, 1))
 ```
-
-- **Gráfico de Probabilidades (P-Plot):** Podemos notar que las probabilidades reales se llegan a adaptar bien a las teóricas predichas por el modelo GEV.
-
-- **Gráfico de Cuantiles (Q-Plot):** Las magnitudes van de 6 a 9, notamos que ajusta bien los valores más probables, sin embargo, en los extremos predichos ya se alejan de los datos reales y aumenta la incertidumbre.
-
-- **Nivel de Retorno:** Nos muestra que los sismos entre 6 a 7.5 ocurren en periodos de 0.5 a 5 años; sin embargo, los sismos de magnitud 8, por ejemplo, ocurren cada 50 años.
-
-Máxima de estabilidad por los hablado anteriomente, los datos se llegan a ajustar bien a un modelo GEV, por lo tanto, decimos que es la única distribución de los datos que es máxima estable Extremal Types Theorem y dado que el valor de $\xi_i<0$, estamos en una GEV reversed Weibull
-
-### Análisis de Picos sobre el Umbral (POT)
-
-```{r}
-# Gráfico de Vida Media Remanente
-mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
-# Gráfico de elección de umbral (tcplot)
-limites_umbral <- quantile(datos$magnitude, probs = c(0.05, 0.95))
-tcplot(datos$magnitude, tlim=limites_umbral)
-UMBRAL <- 5.8
-```
-
-Se toma un umbral entre 5.5 a 6\
-Se evidencia posiblemente que el parámetro $\xi <0$ mostrando que las colas serán ligeras con un límite máximo
-
-### Ajuste de Modelos de Excedencia (Procesos Puntuales / GPD)
 
 #### Parámetros iniciales aleatorios
 
 ```{r}
-fit_rd <- fpot(datos$magnitude, threshold=5.8, model="pp", 
+fit_rd <- fpot(catalogo_limpio$magnitude, threshold=5, model="pp", 
                start=list(loc=10, scale=1, shape=0.1), npp=365.25*24)
 fit_rd$estimate
 fit_rd$std.err
@@ -127,7 +382,7 @@ El npp es correcto porque son una recopilación horaria por cada día del año
 
 ```{r, fig.width=10, fig.height=8, out.width="100%"}
 p_egv <- fit_max$estimate
-fit_ex <- fpot(datos$magnitude, threshold=5.8, model="pp", 
+fit_ex <- fpot(catalogo_limpio$magnitude, threshold=5, model="pp", 
                start=as.list(p_egv), npp=365.25*24)
 fit_ex$estimate
 fit_ex$std.err
@@ -149,103 +404,15 @@ plot(fit_np)
 par(mfrow=c(1,1))
 ```
 
-### Diagnóstico de Independencia y Declustering
-
-#### Prueba de Independencia
-
-```{r}
-excedencias_binarias <- as.numeric(datos$magnitude > UMBRAL)
-#H0: son independientes los sismos
-runs_test <- runs.test(factor(excedencias_binarias))
-
-cat("=== PRUEBA DE RACHAS PARA INDEPENDENCIA ===\n")
-cat("Estadístico:", round(runs_test$statistic, 4), "\n")
-cat("p-valor:", round(runs_test$p.value, 4), "\n\n")
-#<0.05 se rechaza la hipotesis nula
-
-```
-
-```{r}
-# Filtrar excedencias para declustering
-excedencias <- datos %>%
-  filter(magnitude > UMBRAL) %>%
-  arrange(time)
-
-# Aplicar declustering por método de rachas
-dl_object <- decluster(
-  x = excedencias$magnitude,
-  threshold = UMBRAL,
-  method = "runs",
-  r = 3  # Número de observaciones bajo el umbral para cerrar un cluster
-)
-
-# Crear dataset con eventos declusterizados
-excedencias <- excedencias %>%
-  mutate(
-    cluster_id = dl_object,
-    es_evento_principal = !is.na(cluster_id)
-  )
-
-# Separar datasets
-excedencias_original <- excedencias  # Todos los eventos
-excedencias_declust <- excedencias %>%
-  filter(es_evento_principal == TRUE)  # Solo eventos principales
-
-cat("Número de eventos después del declustering:", nrow(excedencias_declust), "\n")
-```
-
-#### Diágnostico del PP
-
-```{r}
-
-
-# Diagnóstico PRE-declustering
-tiempos_pre <- diff(as.numeric(excedencias_original$time)) / (3600 * 24)
-
-qqplot(
-  qexp(ppoints(length(tiempos_pre))),
-  tiempos_pre,
-  main = "Pre-Declustering",
-  xlab = "Cuantiles Teóricos Exponenciales",
-  ylab = "Días entre Excedencias",
-  pch = 20, col = "blue", cex = 0.5
-)
-qqline(tiempos_pre, distribution = qexp, col = "red", lwd = 2)
-
-# Diagnóstico POST-declustering
-tiempos_post <- diff(as.numeric(excedencias_declust$time)) / (3600 * 24)
-
-qqplot(
-  qexp(ppoints(length(tiempos_post))),
-  tiempos_post,
-  main = "Post-Declustering",
-  xlab = "Cuantiles Teóricos Exponenciales",
-  ylab = "Días entre Eventos Principales",
-  pch = 20, col = "darkgreen", cex = 0.5
-)
-qqline(tiempos_post, distribution = qexp, col = "red", lwd = 2)
-
-
-```
-
-por qué se abren los IC? si ya eliminamos las replicas
-
 ### Las r observaciones más grandes
 
-Cómo definimos el ancho de cada bloque? Cómo definirlo en función del umbral (u)
-
-Definiré el r como:
-
-$$r \sim \frac{\text{\# de sismos que superar el umbral u}}{\text{Número total de bloques (años?)}}$$
-
 ```{r}
-num_exc <- sum(datos$magnitude >= UMBRAL, na.rm = TRUE)
+num_exc <- sum(datos$magnitude >= 5, na.rm = TRUE)
 num_anios <- length(unique(year(datos$time)))
 r_optimo <- trunc(num_exc / num_anios)
 
 cat("Número de excedencias totales:", num_exc, "\n")
 cat("Número de años:", num_anios, "\n")
-cat("r óptimo calculado:", r_optimo, "\n")
 
 # Preparar matriz para r-largest
 bloques <- datos %>%
@@ -351,9 +518,10 @@ Dentro de la formula para el uso del modelo EVGAM tenemos tres tipo de interacci
 #### Preparación de datos
 
 ```{r}
-excedencias_evgam <- excedencias_declust %>%
+excedencias_evgam <- catalogo_limpio %>%
+  filter(magnitude>5)%>%
   mutate(
-    excess = magnitude - UMBRAL,
+    excess = magnitude - 5,
     year_decimal = year(time) + (yday(time) / 365.25),
     time_days = as.numeric(difftime(time, min(time), units = "days"))
   ) %>%
@@ -431,7 +599,7 @@ cat("=== MODELO 1:  Tendencia temporal en la escala ===\n")
 summary(fit_evgam1)
 ```
 
-Lo que se puede rescatar aquí es el s(year_decimal) donde la escala $\sigma_t$ fue cambiando a lo largo del tiempo de formas drásticas, se evidencia por los grádos de liberdas efectivos cercanos a 5 (miden la complejidad real de una curva suave ajustada).
+Lo que se puede rescatar aquí es el s(year_decimal) donde la escala $\sigma_t$ fue cambiando a lo largo del tiempo de formas drásticas, se evidencia por los grádos de liberdas efectivos cercanos a 8 (miden la complejidad real de una curva suave ajustada).
 
 El valor promedio de $\sigma_t$ es cercano a 0, lo que podría indicar que las excedencias son más predecibles
 
@@ -446,7 +614,7 @@ plot(fit_evgam1, pages = 1,
 
 Son los valores que aumentarán la varianza promedio a lo largo del tiempo, se los puede predecir y ver como irá cambiando la varianza\\
 
-$$log(\sigma_t) = -0.57 + s(\text{year\_decimal})$$
+$$log(\sigma_t) = -0.42 + s(\text{year\_decimal})$$
 
 ```{r}
 anios_pred <- seq(min(excedencias_evgam$year_decimal), 
@@ -467,4 +635,131 @@ tabla_sigma <- data.frame(
 )
 
 tail(tabla_sigma)
+```
+
+#### Modelo 2: Estacionalidad o Periodicidad
+
+```{r}
+excedencias_evgam$dia_ano <- yday(excedencias_evgam$time)
+
+fit_evgam_ciclico <- evgam(
+  formula = list(excess ~ s(dia_ano, bs = "cc"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd",
+  knots = list(dia_ano = c(1, 365)) # Define los puntos de cierre del ciclo
+)
+```
+
+```{r}
+summary(fit_evgam_ciclico)
+```
+
+Este modelo incorpora ciertas condiciones que dentro de los sismos puede ser de interés:
+
+- **Continuidad del Valor:** $\hat{f}(x_{min}) = \hat{f}(x_{max})$ (La predicción al inicio del ciclo es idéntica a la del final). **riesgo transicione de forma suave y natural entre ciclos anuales**.
+
+- **Continuidad de la Pendiente:** $\hat{f}'(x_{min}) = \hat{f}'(x_{max})$ (La tasa de cambio con la que cierra el año es la misma con la que abre el siguiente).
+
+- **Continuidad de la Curvatura:** $\hat{f}''(x_{min}) = \hat{f}''(x_{max})$ (Garantiza que la transición visual y analítica sea perfectamente suave).
+
+```{r}
+pred_par1 <- predict(fit_evgam_ciclico, type = "response")
+sigma_hat1 <- as.numeric(pred_par1[, 1])
+xi_hat1    <- as.numeric(pred_par1[, 2])
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat1) > 1e-8,
+  sigma_hat1 / xi_hat1 * ((1 - p)^(-xi_hat1) - 1),
+  -sigma_hat1 * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+plot(fit_evgam_ciclico, pages = 1, 
+        main = "Tendencia temporal en log(σ)",
+        xlab = "Año", 
+        ylab = "s(year_decimal)",
+        se = TRUE,           # Bandas de confianza
+        shade = TRUE)        # Sombrear incertidumbre
+```
+
+Aqui es donde se ve que se cumple las condiciones mencionadas.
+
+```{r}
+dias_pred <- seq(1, 365, by = 15)
+# type = "response" YA aplica la función inversa (exponencial), no necesitas el exp()
+pred_reales <- predict(fit_evgam_ciclico, 
+                       newdata = data.frame(dia_ano = dias_pred),
+                       type = "response")
+
+
+sigma_estimado <- pred_reales$scale
+
+# 4. Crear tu tabla interpretable
+tabla_sigma_ciclica <- data.frame(
+  Dia_Ano         = dias_pred,
+  Sigma           = sigma_estimado,
+  # Como tu umbral u = 5, la magnitud teórica esperada de un exceso es: u + sigma
+  Magnitud_Espera = 5 + sigma_estimado  
+)
+
+# 5. Ver los últimos registros de la tabla
+tail(tabla_sigma_ciclica)
+```
+
+### Selección y Comparación de Modelos
+
+#### Criterios de Información y Verosimilitud Penalizada, para M0,M1,M2
+
+```{r}
+# Extraer métricas de evgam
+tabla_comparativa <- data.frame(
+  Modelo = c("M0: GPD Estacionario", 
+             "M1: Tendencia Temporal s(year_decimal)", 
+             "M2: Estacionalidad Cíclica s(dia_ano)"),
+  NLLH = c(fit_evgam0$logLik * -1, 
+           fit_evgam1$logLik * -1, 
+           fit_evgam_ciclico$logLik * -1),
+  AIC = c(AIC(fit_evgam0), 
+          AIC(fit_evgam1), 
+          AIC(fit_evgam_ciclico)),
+  MQE_Residuos = c(mqe_m0, mqe_m1, mqe_mciclo)
+)
+
+# Formatear salida para el reporte
+knitr::kable(tabla_comparativa, digits = 4, caption = "Métricas de Selección y Ajuste para Modelos de Excedencia")
+```
+
+#### Gráfico de Residuos Cruzados
+
+Contrastamos la distribución de los residuos de Cox-Snell estandarizados frente a la distribución teórica exponencial para los tres escenarios de excedencia
+
+```{r}
+df_res_grafico <- tibble(
+  Teorico = qexp(p_points),
+  M0 = sort(res_m0),
+  M1 = sort(res_m1),
+  M2 = sort(res_mciclo)
+) %>%
+  pivot_longer(cols = c(M0, M1, M2), names_to = "Modelo", values_to = "Observado")
+
+ggplot(df_res_grafico, aes(x = Teorico, y = Observado, color = Modelo)) +
+  geom_point(alpha = 0.5, size = 1.5) +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed", color = "black", linewidth = 0.8) +
+  scale_color_manual(values = c("M0" = "#7f8c8d", "M1" = "#2c3e50", "M2" = "#e74c3c")) +
+  labs(
+    title = "Gráfico Q-Q de Residuos Estandarizados de Cox-Snell",
+    subtitle = "Evaluación de homocedasticidad y estabilidad frente a la distribución Exp(1)",
+    x = "Cuantiles Teóricos Exponenciales",
+    y = "Cuantiles de los Residuos del Modelo"
+  ) +
+  theme_minimal() +
+  facet_wrap(~Modelo) +
+  theme(legend.position = "none", plot.title = element_text(face = "bold"))
 ```
