@@ -27,6 +27,8 @@ library(tseries)
 library(extRemes)
 library(scales)
 library(geosphere)
+library(tidyr)
+library(dplyr)
 
 # Cargar datos
 datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismicevents.rds")
@@ -404,10 +406,6 @@ plot(fit_np)
 par(mfrow=c(1,1))
 ```
 
-#### Ajuste del modelos en función del tiempo
-
-##### Modelo lineal
-
 ### Las r observaciones más grandes
 
 ```{r}
@@ -726,23 +724,139 @@ ggplot(grilla_pura, aes(x = longitude, y = latitude, fill = escala)) +
   )
 ```
 
-### Selección y Comparación de Modelos
-
-#### Criterios de Información y Verosimilitud Penalizada, para M0,M1,M2
+#### Modelo 4: Scale en función a la profundidad y distancia a fallas
 
 ```{r}
-# Extraer métricas de evgam
+fit_espacial_2 <- evgam(
+  formula = list(excess ~ s(nearest_fault_dist, depth, bs = "tp"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+cat("=== MODELO 3:  Tendencia de profundidad y distancia a fallas en la escala ===\n")
+summary(fit_espacial_2)
+```
+
+```{r}
+pred_par2 <- predict(fit_espacial_2, type = "response")
+sigma_hat2 <- as.numeric(pred_par2[, 1])
+xi_hat2    <- as.numeric(pred_par2[, 2])
+# Theoretical GPD quantiles
+q_theo2 <- ifelse(
+  abs(xi_hat2) > 1e-8,
+  sigma_hat2 / xi_hat2 * ((1 - p)^(-xi_hat2) - 1),
+  -sigma_hat2 * log(1 - p)
+)
+
+qqplot(q_theo2, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# 1. Crear una grilla regular para evaluar el spline
+# Esto genera combinaciones de prueba cubriendo el rango de tus datos
+grid_datos <- expand.grid(
+  nearest_fault_dist = seq(min(excedencias_evgam$nearest_fault_dist, na.rm = TRUE),
+                           max(excedencias_evgam$nearest_fault_dist, na.rm = TRUE), 
+                           length.out = 100),
+  depth = seq(min(excedencias_evgam$depth, na.rm = TRUE),
+              max(excedencias_evgam$depth, na.rm = TRUE), 
+              length.out = 100)
+)
+
+# 2. Predecir los valores en la grilla usando tu nuevo modelo
+preds_grid <- predict(fit_espacial_2, newdata = grid_datos)
+
+# 3. Calcular el valor real de la escala (sigma = exp(logscale)) y unir a la grilla
+grid_datos$escala_sigma <- exp(preds_grid$logscale)
+
+# 4. Graficar el mapa de calor y contornos de la escala
+ggplot(grid_datos, aes(x = nearest_fault_dist, y = depth, z = escala_sigma)) +
+  # Mapa de calor de fondo
+  geom_tile(aes(fill = escala_sigma)) +
+  # Líneas de contorno con etiquetas del valor de la escala
+  geom_contour(color = "white", alpha = 0.6) +
+  scale_fill_viridis_c(option = "viridis", name = "Parámetro\nEscala (sigma)") +
+  # Invertir el eje Y es común en sismología para que el "suelo" esté arriba y el fondo abajo
+  scale_y_reverse() + 
+  labs(
+    title = "Efecto del Spline Físico en el Parámetro de Escala (GPD)",
+    subtitle = "Comportamiento de sigma según la profundidad y la distancia a la falla",
+    x = "Distancia a la Falla Más Cercana (unidades de tu dato)",
+    y = "Profundidad del Hipocentro (km)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  )
+```
+
+#### Modelo 5: Scale en función del tiempo y magnitudes espaciales
+
+```{r}
+fit_combinado <- evgam(
+  formula = list(excess ~ s(time_days, bs = "cs") + s(nearest_fault_dist, depth, by = time_days), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+cat("=== MODELO 5:  Tendencia temporal y espacial en la escala ===\n")
+summary(fit_combinado)
+```
+
+```{r}
+pred_par3 <- predict(fit_combinado, type = "response")
+sigma_hat3 <- as.numeric(pred_par3[, 1])
+xi_hat3    <- as.numeric(pred_par3[, 2])
+# Theoretical GPD quantiles
+q_theo3 <- ifelse(
+  abs(xi_hat3) > 1e-8,
+  sigma_hat3 / xi_hat3 * ((1 - p)^(-xi_hat3) - 1),
+  -sigma_hat3 * log(1 - p)
+)
+
+qqplot(q_theo3, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+### Selección y Comparación de Modelos
+
+#### Criterios de Información y Verosimilitud Penalizada, para M0,M1,M2, M3,M4, M5
+
+```{r}
 tabla_comparativa <- data.frame(
   Modelo = c("M0: GPD Estacionario", 
-             "M1: Tendencia Temporal s(year_decimal)", 
-             "M2: Estacionalidad Cíclica s(dia_ano)"),
+             "M1: Tendencia Temporal Lineal (time_years)", 
+             "M2: Tendencia Temporal No Lineal s(time_days)",
+             "M3: Efecto Espacial s(longitude, latitude)",
+             "M4: Efecto Espacial s(nearest_fault_dist, depth)",
+             "M5: Efecto Espacial y Temporal"),
   NLLH = c(fit_evgam0$logLik * -1, 
            fit_evgam_lineal$logLik * -1, 
-           fit_espacial_1$logLik * -1),
+           fit_evgam1$logLik * -1,
+           fit_espacial_1$logLik * -1,
+           fit_espacial_2$logLik *-1,
+           fit_combinado$logLik *-1),
   AIC = c(AIC(fit_evgam0), 
           AIC(fit_evgam_lineal), 
-          AIC(fit_espacial_1))
-  #MQE_Residuos = c(mqe_m0, mqe_m1, mqe_mciclo)
+          AIC(fit_evgam1),
+          AIC(fit_espacial_1),
+          AIC(fit_espacial_2),
+          AIC(fit_combinado))
 )
 
 # Formatear salida para el reporte
@@ -751,38 +865,141 @@ knitr::kable(tabla_comparativa, digits = 4, caption = "Métricas de Selección y
 
 #### Gráfico de Residuos Cruzados
 
-Contrastamos la distribución de los residuos de Cox-Snell estandarizados frente a la distribución teórica exponencial para los tres escenarios de excedencia
+Contrastamos la distribución de los residuos de Cox-Snell estandarizados frente a la distribución teórica exponencial para los cinco escenarios de excedencia
 
 $$R_t = \frac{1}{\hat{\xi}_t} \log \left( 1 + \hat{\xi}_t \frac{Y_t - u}{\hat{\sigma}_t} \right)$$
 
+Si los residuos llegan a ser iid, la distribución llega a converger a una exp(1)
+
 ```{r}
 
+library(evgam)
+
+# 1. Obtener las predicciones de los parámetros para todos los modelos
+preds_m0 <- predict(fit_evgam0)
 preds_m1 <- predict(fit_evgam_lineal)
 preds_m2 <- predict(fit_evgam1)
+preds_m3 <- predict(fit_espacial_1)
+preds_m4 <- predict(fit_espacial_2)
+preds_m_comb <- predict(fit_combinado) # <-- Nuevo modelo combinado
+
+# 2. Extraer parámetros de escala (scale = exp(logscale)) y forma (shape)
+# Modelo 0: Estacionario
+escala_m0 <- exp(preds_m0$logscale)
+shape_m0  <- preds_m0$shape
+
+# Modelo 1: Tendencia Lineal
 escala_m1 <- exp(preds_m1$logscale)
-escala_m2 <- exp(preds_m2$logscale)
 shape_m1  <- preds_m1$shape
+
+# Modelo 2: Tendencia No Lineal (time_days)
+escala_m2 <- exp(preds_m2$logscale)
 shape_m2  <- preds_m2$shape
 
+# Modelo 3: Efecto Espacial (lon, lat)
+escala_m3 <- exp(preds_m3$logscale)
+shape_m3  <- preds_m3$shape
+
+# Modelo 4: Efecto Físico (dist, depth)
+escala_m4 <- exp(preds_m4$logscale)
+shape_m4  <- preds_m4$shape
+
+# Modelo Combinado: Tiempo + Física
+escala_m_comb <- exp(preds_m_comb$logscale) # <-- Nuevo
+shape_m_comb  <- preds_m_comb$shape        # <-- Nuevo
+
+# 3. Calcular el exceso real (Magnitud - Umbral)
 exceso_real <- excedencias_evgam$magnitud - 5.0 
 
+# 4. Transformación de Cox-Snell para residuales GPD estandarizados
+res_m0_std     <- (1 / shape_m0) * log(1 + shape_m0 * (exceso_real / escala_m0))
+res_m1_std     <- (1 / shape_m1) * log(1 + shape_m1 * (exceso_real / escala_m1))
+res_m2_std     <- (1 / shape_m2) * log(1 + shape_m2 * (exceso_real / escala_m2))
+res_m3_std     <- (1 / shape_m3) * log(1 + shape_m3 * (exceso_real / escala_m3))
+res_m4_std     <- (1 / shape_m4) * log(1 + shape_m4 * (exceso_real / escala_m4))
+res_m_comb_std <- (1 / shape_m_comb) * log(1 + shape_m_comb * (exceso_real / escala_m_comb)) # <-- Nuevo
 
-res_m1_std <- (1 / shape_m1) * log(1 + shape_m1 * (exceso_real / escala_m1))
-res_m2_std <- (1 / shape_m2) * log(1 + shape_m2 * (exceso_real / escala_m2))
+# 5. Construir el DataFrame integrado de residuos
+residuos_todos <- data.frame(
+  m0     = res_m0_std,
+  m1     = res_m1_std,
+  m2     = res_m2_std,
+  m3     = res_m3_std,
+  m4     = res_m4_std,
+  m_comb = res_m_comb_std # <-- Nuevo
+)
+
+# 6. Limpieza estricta: Filtrar filas con NAs, NaNs o valores infinitos 
+residuos_limpios <- residuos_todos[
+  complete.cases(residuos_todos) & 
+    is.finite(residuos_todos$m0) & 
+    is.finite(residuos_todos$m1) & 
+    is.finite(residuos_todos$m2) & 
+    is.finite(residuos_todos$m3) &
+    is.finite(residuos_todos$m4) &
+    is.finite(residuos_todos$m_comb), # <-- Nuevo
+]
 
 
-residuos_limpios <- data.frame(m1 = res_m1_std, m2 = res_m2_std)
-residuos_limpios <- residuos_limpios[complete.cases(residuos_limpios) & 
-                                       is.finite(residuos_limpios$m1) & 
-                                       is.finite(residuos_limpios$m2), ]
 
-
-ccf(x = residuos_limpios$m1, 
-    y = residuos_limpios$m2, 
-    lag.max = 24, 
-    main = "CCF de residuos cruzados (GPD)", 
-    ylab = "CCF", 
-    xlab = "Rezagos")
 ```
 
-El detalle dominante es el pico masivo en el rezago $0$, donde la correlación cruzada es prácticamente $1.0$. Esto significa que, a pesar de ser dos modelos distintos, están produciendo series de residuos casi idénticas.
+```{r}
+acf(residuos_limpios$m_comb, main = "ACF de los Residuos del Modelo M5", lag.max = 30)
+```
+
+```{r}
+# 7. Preparación de datos para ggplot (Formato Largo)
+n_obs <- nrow(residuos_limpios)
+teoricos_exp <- qexp(ppoints(n_obs))
+
+df_qq_long <- residuos_limpios %>%
+  mutate(teoricos = teoricos_exp) %>%
+  pivot_longer(cols = c(
+        m_comb, 
+    #    m0, 
+    #    m1,
+    #    m2,
+    #    m3,
+    #m4
+  ), 
+  names_to = "Modelo", 
+  values_to = "Residual") %>%
+  group_by(Modelo) %>%
+  arrange(Residual) %>%
+  mutate(obs_sorted = Residual) %>%
+  ungroup()
+
+# 8. Gráfico de Densidades Comparativo
+ggplot(df_qq_long, aes(x = Residual, fill = Modelo, color = Modelo)) +
+  geom_density(alpha = 0.15) + # Bajé un poco el alpha para que se distingan mejor las 6 capas
+  stat_function(fun = dexp, args = list(rate = 1), 
+                color = "black", linetype = "dashed", size = 0.9) +
+  scale_fill_viridis_d(option = "plasma", 
+                       labels = c("m0" = "M0: Estacionario",
+                                  "m1" = "M1: Temporal Lineal",
+                                  "m2" = "M2: Temporal No Lineal",
+                                  "m3" = "M3: Espacial Puro",
+                                  "m4" = "M4: Físico Geológico",
+                                  "m_comb" = "M_Comb: Espacio-Temporal Físico")) +
+  scale_color_viridis_d(option = "plasma", 
+                        labels = c("m0" = "M0: Estacionario",
+                                   "m1" = "M1: Temporal Lineal",
+                                   "m2" = "M2: Temporal No Lineal",
+                                   "m3" = "M3: Espacial Puro",
+                                   "m4" = "M4: Físico Geológico",
+                                   "m_comb" = "M_Comb: Espacio-Temporal Físico")) +
+  coord_cartesian(xlim = c(0, 8), ylim = c(0, 1.2)) +
+  labs(title = "Forma del Error: Densidad de Residuos Estandarizados",
+       subtitle = "Comparación de los 6 modelos frente a la referencia teórica Exp(1)",
+       x = "Valor del Residuo",
+       y = "Densidad",
+       fill = "Modelos Evaluados",
+       color = "Modelos Evaluados") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 13))
+```
+
+El modelo M\$ (Físico Geológico) es el mejor desde el punto de vista de los residuos. Al incluir la componente Espaciales(profundiad, distancia a fallas y además el factor cronológico), el modelo logra corregir parte de la distorsión en los residuos de magnitudes bajas/moderadas que los modelos temporales y el estacionario no pueden resolver
