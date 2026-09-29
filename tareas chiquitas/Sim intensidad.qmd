@@ -1,0 +1,57 @@
+---
+title: "SIMULACIÓN DE INTENSIDAD"
+author: "DANIEL LARA"
+format: pdf
+editor: visual
+---
+
+```{r, warning=FALSE, message=FALSE}
+library(dplyr)
+library(spatstat)
+base_original<-readRDS("base_original.rds")
+datos<-base_original%>%filter(distrito=="QUITUMBE")
+```
+
+En la siguiente ventana definida por la longitud y latitud de Quitumbe.
+
+```{r}
+w <- owin(xrange = range(datos$longitud, na.rm = TRUE), 
+          yrange = range(datos$latitud, na.rm = TRUE))
+```
+
+Transformación del conjunto de eventos en un Proceso Puntual.
+
+```{r, warning=FALSE}
+datos_ppp <- ppp(x = datos$longitud,  y = datos$latitud,  window = w )
+```
+
+Tomaremos de ejemplo los siguientes cálculos de los siguientes anchos de banda.
+
+```{r}
+sigma_diggle <- bw.diggle(datos_ppp)
+sigma_cv <- bw.ppl(datos_ppp)
+```
+
+```{r, echo=FALSE}
+paste0("el sigma de bw.diggle es: ", sigma_diggle)
+paste0("el sigma de cv es: ", sigma_cv)
+```
+
+Entonces las siguientes funciones de intensidad son:
+
+```{r}
+lambda_quitumbe_d<-density(datos_ppp, sigma = sigma_diggle)
+lambda_quitumbe_c<-density(datos_ppp, sigma = sigma_cv)
+```
+
+```{r, echo=FALSE, fig.width=12, fig.height=6}
+par(mfrow = c(1, 2))
+plot(lambda_quitumbe_d, main = "Intensidad de asesinatos (sigma_diggle)")
+plot(datos_ppp, add = TRUE, pch = 16, cex = 0.5)
+
+plot(lambda_quitumbe_c, main = "Intensidad de asesinatos (sigma_cv)")
+plot(datos_ppp, add = TRUE, pch = 16, cex = 0.5)
+par(mfrow=c(1,1))
+```
+
+El ancho de banda de bw.ppl aplica un radio de influencia más amplio alrededor de un evento fusionando el ruido local y revelando de forma más clara las zonas continuas de alta concentración

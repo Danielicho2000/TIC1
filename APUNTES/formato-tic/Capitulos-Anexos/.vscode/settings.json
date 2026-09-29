@@ -1,0 +1,13 @@
+{
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/d:\\TIC1\\APUNTES\\formato-tic\\Capitulos-Anexos\\cap-01.aux": true,
+        "**/d:\\TIC1\\APUNTES\\formato-tic\\Capitulos-Anexos\\cap-01.log": true,
+        "**/d:\\TIC1\\APUNTES\\formato-tic\\Capitulos-Anexos\\cap-01.gz": true,
+        "**/d:\\TIC1\\APUNTES\\formato-tic\\Capitulos-Anexos\\cap-01.out": true
+    }
+}

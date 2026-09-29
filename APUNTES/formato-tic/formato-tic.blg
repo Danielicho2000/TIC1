@@ -1,0 +1,56 @@
+This is BibTeX, Version 0.99e
+Capacity: max_strings=200000, hash_size=200000, hash_prime=170003
+The top-level auxiliary file: formato-tic.aux
+Reallocating 'name_of_file' (item size: 1) to 28 items.
+A level-1 auxiliary file: Capitulos-Anexos/cap-01.aux
+Reallocating 'name_of_file' (item size: 1) to 28 items.
+A level-1 auxiliary file: Capitulos-Anexos/cap-02.aux
+Reallocating 'name_of_file' (item size: 1) to 28 items.
+A level-1 auxiliary file: Capitulos-Anexos/cap-03.aux
+Reallocating 'name_of_file' (item size: 1) to 30 items.
+A level-1 auxiliary file: Capitulos-Anexos/anexo-01.aux
+Reallocating 'name_of_file' (item size: 1) to 6 items.
+The style file: plain.bst
+Reallocating 'name_of_file' (item size: 1) to 16 items.
+Database file #1: referencias-tic.bib
+You've used 6 entries,
+            2118 wiz_defined-function locations,
+            538 strings with 5363 characters,
+and the built_in function-call counts, 1485 in all, are:
+= -- 142
+> -- 54
+< -- 0
++ -- 25
+- -- 16
+* -- 74
+:= -- 264
+add.period$ -- 21
+call.type$ -- 6
+change.case$ -- 23
+chr.to.int$ -- 0
+cite$ -- 6
+duplicate$ -- 66
+empty$ -- 135
+format.name$ -- 16
+if$ -- 311
+int.to.chr$ -- 0
+int.to.str$ -- 6
+missing$ -- 9
+newline$ -- 36
+num.names$ -- 12
+pop$ -- 38
+preamble$ -- 1
+purify$ -- 20
+quote$ -- 0
+skip$ -- 39
+stack$ -- 0
+substring$ -- 49
+swap$ -- 6
+text.length$ -- 0
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 16
+warning$ -- 0
+while$ -- 14
+width$ -- 7
+write$ -- 73

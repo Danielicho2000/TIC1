@@ -1,0 +1,86 @@
+---
+format: pdf
+editor: visual
+---
+
+## Mini Proyecto S5
+
+*Daniel Lara Del Salto*
+
+Los datos analizados corresponden a los registros de homicidios obtenidos a través del portal oficial Datos Abiertos Ecuador. Para este caso de estudio, el análisis espacial se delimitó a la parroquia de Quitumbe (Quito, Pichincha), abarcando el período comprendido entre el 1 de enero de 2014 y el 28 de febrero de 2026.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE}
+library(knitr)
+library(dplyr)
+base_original<-readRDS("base_original.rds")
+datos<-base_original%>%filter(distrito=="QUITUMBE")%>%select(-c(distrito, codigo_canton, codigo_provincia, medida_edad))
+```
+
+Se logra observar el siguiente conjunto de eventos, definido por los asesinatos en la zona de Quitumbe.
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, fig.align='center', fig.height=2.7, fig.width=9}
+library(spatstat)
+ventana_grados <- convexhull.xy(datos$longitud, datos$latitud)
+pp_grados <- ppp(datos$longitud, datos$latitud, window = ventana_grados)
+lambda<-density(pp_grados, sigma = bw.ppl(pp_grados))
+# Graficar
+par(mfrow = c(1, 2))
+par(mar = c(4, 4, 3, 2)) 
+plot(pp_grados, 
+     main = "Asesinatos en Quitumbe", 
+     cols = "#1f78b4", 
+     pch = 20, 
+     cex = 0.6,          
+     cex.main = 0.9,     
+     axes = TRUE) 
+
+plot(lambda, 
+     main = "Intensidad Estimada", 
+     cex.main = 0.9)
+plot(pp_grados, add = TRUE, pch = 16, col = "black", cex = 0.3)
+
+par(mfrow = c(1, 1))
+```
+
+Se puede notar que existen 3 ligeras agrupaciones con alta intensidad, a continuación se verificará o refutará el posible comportamiento de agrupamiento.
+
+#### Cálculo de la función F, G y J
+
+```{r, echo=FALSE, fig.align="center", fig.width=5, fig.height=2.7}
+par(mfrow=c(2,2))
+par(mar = c(3, 3, 2, 1))
+plot(Fest(pp_grados))
+plot(Gest(pp_grados))
+plot(Jest(pp_grados))
+par(mfrow = c(1, 1))
+```
+
+Podemos notar justamente en el gráfico de la función J que los valores de sus aproximaciones son menores a 1, por tanto se podría decir que en efecto existe un comportamiento de agrupamiento.
+
+#### Cálculo de la función K y L
+
+```{r, echo=FALSE, fig.align="center", fig.width=6, fig.height=2.5}
+par(mfrow=c(1,2))
+par(mar = c(4, 4, 2, 2))
+plot(Kest(pp_grados))
+plot(Lest(pp_grados))
+par(mfrow = c(1, 1))
+```
+
+Notamos que los valores obtenidos de la función K y L son mayores a $\pi r^2$ y a $r$, respectivamente, por tanto se puede volver a afirmar que los datos son agrupados.
+
+#### Interpretación comparada con CSR.
+
+Los datos de asesinato en el distrito de Quitumbe en Quito, se llegan a comportar como datos agrupados a ciertas localizaciones de la zona. Es decir, los eventos que suceden dentro de los 3 grupos de alta intensidad aumentan la probabilidad de ocurrencia en las cercanías.
+
+##### Discusión sobre posible inhomogeneidad.
+
+Como se pudo observar en el gráfico de la función K de Ripley, es evidente que el proceso es inhomogeneo pues el número esperado de eventos no es el mismo por sectores a medida que va aumentando el radio y cambia el evento típico del proceso.
+
+\newpage
+
+## Bibliografía
+
+- Quispe Quispe, B., & López de Castilla Vasquez, C. (2017). Modelos estadísticos en procesos puntuales espaciales poisson para evaluar la distribución espacial de los hechos delictivos en Lima, Perú. *Anales Científicos*, 78(2), 100-111. [https://doi.org/10.21704/ac.v78i2.1045](https://www.google.com/search?q=https://doi.org/10.21704/ac.v78i2.1045)
+
+- Cuvero, Y. (2026). *Sesión 5: Funciones resumen para procesos puntuales: Funciones F, G, J, K y L con R y spatstat* \[Diapositivas de clase\]. Procesos Puntuales, Escuela Politécnica Nacional.

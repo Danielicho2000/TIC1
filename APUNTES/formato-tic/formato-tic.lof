@@ -1,0 +1,9 @@
+\babel@toc {spanish}{}\relax 
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {2.1}{\ignorespaces Comparación del conteo de eventos sísmicos antes y después del filtrado por magnitud de completitud. No es que hubiera menos sismos, sino que actualmente se registran con mayor precisión instrumental.}}{9}{figure.2.1}%
+\contentsline {figure}{\numberline {2.2}{\ignorespaces Relación de Gutenberg-Richter: $\log _{10}(N) = a - bM$ para el catálogo de eventos sísmicos filtrado por magnitud de completitud.}}{10}{figure.2.2}%
+\contentsline {figure}{\numberline {2.3}{\ignorespaces Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se debe cumplir que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$).}}{11}{figure.2.3}%
+\contentsline {figure}{\numberline {2.4}{\ignorespaces Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log _{10}(\eta )$) obtenida mediante el algoritmo de Zaliapin.}}{14}{figure.2.4}%
+\addvspace {10\p@ }
+\addvspace {10\p@ }

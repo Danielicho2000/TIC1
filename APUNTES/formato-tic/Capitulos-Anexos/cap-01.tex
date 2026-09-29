@@ -1,0 +1,175 @@
+% !TeX root = ../formato-tic.tex
+\chapter{Descripción del componente desarrollado}
+
+Se sugiere que el documento de Trabajo de Integración Curricular tenga una extensión total de entre 30 y 50 hojas, sin considerar los anexos.
+
+Describir de forma simple el componente que fue desarrollado.
+
+\section{Objetivo general}
+
+Estudiar las propiedades, características y modelos estadísticos asociados a procesos puntuales marcados.
+\section{Objetivos específicos}
+\begin{enumerate}
+    \item OE1
+    \item OE2
+    \item OE3
+    \item OE4: Proponer dos objetivos específicos en base al estudio de valores extremos.
+\end{enumerate}
+
+\section{Alcance}
+
+Describir el alcance del componente de acuerdo a los datos y la ventana de datos
+y definir las unidades de las magnitudes de importancia.
+
+Declustering, lograrlooooo
+
+\section{Marco teórico}
+\begin{enumerate}
+\item \textbf{Procesos Puntuales}
+    \begin{enumerate}
+        \item \textbf{Procesos Puntuales Marcados}
+            
+        \textbf{Definición:}
+            Sea $(A, \mathcal{B}(A))$ un espacio medible, donde:
+            \begin{itemize}
+            \item $A$ es un conjunto no vacío, y
+            \item $\mathcal{B}(A)$ es la $\sigma$-álgebra de Borel del conjunto $A$. 
+            \end{itemize}
+            Un Proceso puntual es una medida aleatoria de conteo $N$ definida sobre $(A, \mathcal{B}(A))$.
+            \begin{align*}
+                N: \mathcal{B}(A) &\longrightarrow \mathbb{N}_0 \cup \{+\infty\} \\
+                B &\longmapsto N(B)  =\sum_{i=1}^{\infty} \mathbf{1}(x_i \in B)
+            \end{align*}
+            Entonces un Proceso Puntual Marcado es un Proceso Puntual $N$ definido sobre $(A, \mathcal{B}(A))$ 
+            y un conjunto de marcas $M$ con $\sigma$-álgebra $\mathcal{B}(M)$, tal que $N$ es una medida aleatoria de conteo definida 
+            sobre $(A \times M, \mathcal{B}(A) \otimes \mathcal{B}(M))$.
+            \begin{align*}
+                N: \mathcal{B}(A \times M) &\longrightarrow \mathbb{N}_0 \cup \{+\infty\} \\
+                X \times Y &\longmapsto N(X \times Y)  =\sum_{i=1}^{\infty} \mathbf{1}(x_i\in X, m_i \in Y)
+            \end{align*}
+            Con $N(X\times Y) < \infty$ para todo $X \in \mathcal{B}(A)$ y $Y \in \mathcal{B}(M)$.
+            \cite{daley2003introduction}
+    \item \textbf{Propiedades de un Proceso Puntual Marcado}
+    \begin{itemize}
+        \item \textbf{Medida de Intensidad de un Proceso Puntual Marcado.}
+        Sea $\Phi=\{(X_i, M_i)\}_{i=1}^{\infty}$ un Proceso Puntual Marcado en $S\times M$, donde:
+        \begin{itemize}
+            \item $X_i \in S$ es la ventana de estudio del conjunto de eventos $S$,
+            \item $M_i \in M$ es la marca asociada al evento $(X_i)$ del conjunto de marcas $M$.
+        \end{itemize}
+        La medida de intensidad de $\Phi$ es el primer momento de la medida aleatoria de conteo $N$ definida sobre 
+        $(S \times  M, \mathcal{B}(S) \otimes \mathcal{B}(M))$, es decir:
+        \begin{align*}
+            \Lambda(A \times C)= \mathbb{E}[N(A\times C)] 
+        \end{align*}
+        Con $A \in \mathcal{B}(S)$ y $C \in \mathcal{B}(M)$.
+        \cite{daley2003introduction}
+        \item \textbf{Medida de Covarianza de un Proceso Puntual Marcado ($\gamma$)}
+        Sea $\Phi=\{(X_i, M_i)\}_{i=1}^{\infty}$ un Proceso Puntual Marcado en $S\times M$, donde $S$ es la ventana de estudio y $M$ es el espacio de marcas asociadas 
+        a los eventos de $S$. La medida de covarianza del proceso  caracteriza las propiedades de segundo orden, cuantificando la dependencia conjuta entre un par de eventos 
+        y marcas a los largo de la ventana de estudio. Sean $A_1, A_2 \in \mathbb{B}(S)$ y $C_1, C_2 \in \mathbb{B}(M)$, la medida de covarianza se define como:
+        \begin{align*}
+            \gamma(A_1\times C_1, A_2\times C_2) &= Cov(N(A_1\times C_1), N(A_2\times C_2))
+        \end{align*}
+        Donde $N$ es la función de conteo del Proceso Puntual Marcado $\Phi$.
+        \cite{daley2003introduction}
+        \item \textbf{Convergencia débil de un Proceso Puntual}
+        Se dice que una sucesión de Procesos Puntuales $\{N_n\}_{n\in\mathbb{N}}$ en el mismo espacio medible $E$ 
+        converge débilmente a un Proceso Puntual $N$ en $E$ si para una colección de subconjuntos acotados $\{A_j\}_{j=1}^k \subset E$. Si se cumple que:
+        \begin{align*}
+            (N_n(A_1),\ldots,N_n(A_k)) &\overset{d}{\longrightarrow} (N(A_1),\ldots,N(A_k)) \forall n\in\mathbb{N} &\text{y} \\
+            \Pr(N(\partial A_i)=0) &= 1, \quad i=1,\ldots,k,\ k \geq 1
+        \end{align*}
+        Con $\partial A_i$ la frontera de $A_i$ en el espacio medible $E$. Con relación a esto último indicaría que no existen eventos en la frontera del conjunto $A_i$
+        \cite{daley2008introduction}
+     \end{itemize}   
+    \item \textbf{Procesos de Poisson}
+    \textbf{Definición:} Un Proceso Puntual de Poisson es un Proceso Puntual $N$ definido sobre un espacio medible E, tal que:
+    \begin{itemize}
+        \item Para cualquier conjunto acotado $A \in E$, $N(A)$ sigue una distribución de Poisson con parámetro $\Lambda(A)$.
+        \item Para cualquier colección finita de conjuntos acotados disjuntos $\{A_j\}_{j=1}^k \subset E$, las variables aleatorias $N(A_1),\ldots,N(A_k)$ son independientes 
+        entre ellas. 
+    \end{itemize}
+    \cite{daley2003introduction}
+    \item \textbf{Complete Spatial Randomness (CSR)}
+    El fenomeno de Complete Spatial Randomness (CSR) hace referencia a un patrón puntual que es completamente aleatorio en el espacio de estudio, es decir, que el proceso es sinónimo
+    de un proceso de Poisson homogéneo, donde la intensidad del proceso es constante en todo el espacio de estudio y los eventos son independientes entre sí.
+    
+    Este fenómeno se lo mencionará con la siguiente hipotesis nula: $H_0: \text{CSR}$, y se lo contrastará con la hipótesis alternativa $H_1: \text{No CSR}$, donde el patrón puntual 
+    es no aleatorio y presenta un comportamiento de clusterización, inhibición, intensidad no constante, anisotropía o efectos de borde o errores de medición. 
+    \cite{moraga2023spatial}
+    \item \textit{Relación del conteo de eventos bajo ciertas condiciones sigue una distribución de Poisson}
+    
+    \end{enumerate}
+    \item \textbf{Teoría de Valores Extremos}
+    
+    La teoría de valores extremos es una rama de la estadística enfocada en analizar eventos en los datos concentrados en las colas de su distribución. Esta teoría prevée un camino 
+    para el entendimiento y modelamiento de los comportamientos de los valores que superen un cierto umbral crítico ó en los máximos obtenidos en períodos de interés.
+    
+    Estableciendo una analogía con el Teorema Central del Límite, la teoría de valores extremos determina un marco teórico para el modelamiento de los datos extremos o máximos de una muestra aleatoria.
+    Con esto en cuenta, el presente trabajo hará hincapié en dos enfoques dentro de la Teoría de Valores Extremos: el enfoque de máximos por bloques; y, el enfoque de valores por encima de un umbral. 
+    \cite{cqf2024extreme}
+    \begin{itemize}
+        \item \textbf{Enfoque de Máximos por Bloques: Distribución Generalizada de Valores Extremos}
+        Este enfoque consiste en dividir la serie de datos en bloques contiguos de igual tamaño para extraer el valor máximo de la base de cada uno. La colección de máximos se ajusta a una Distribución 
+        de Valores Extremos Generalizada (GEV); sin embargo, presenta el problema de que, si una región de continuos contiene múltiples eventos extremos importantes, solo el mayor es considerado, descartando 
+        de esta manera información potencialmente valiosa de los demás datos.
+    
+        \item \textbf{Enfoque de Umbral: Picos sobre el Umbral}
+        Este enfoque consiste en fijar un umbral crítico $u$ y seleccionar únicamente las observaciones que lo superan. Las magnitudes de estas excedencias se modelan mediante una Distribución
+        Pareto Generalizada (GPD) al momento de considerar el umbral $u$ acerándose al infinito, lo que permite aprovechar de mejor manera todos los datos extremos disponibles en toda serie de datos.
+    \end{itemize}
+     \cite{coles2001introduction}
+
+    Las funciones de Distribución Generalizada de Valores Extremos y Generalizada de Pareto, respectivamente son:
+    \begin{itemize}
+        \item Distribución Generalizada de Valores Extremos:
+        \begin{equation}
+            G(x; \mu, \sigma, \xi) = \exp \left\{ - \left[ 1 + \xi \left( \frac{x - \mu}{\sigma} \right) \right]^{-1/\xi} \right\}
+        \end{equation}
+        Donde:
+        \begin{itemize}
+            \item $\mu \in \mathbb{R}$ es el parámetro de localización,
+            \item $\sigma > 0$ es el parámetro de escala, y
+            \item $\xi \in \mathbb{R}$ es el parámetro de forma.
+        \end{itemize}
+        \item Distribución Generalizada de Pareto:
+        \begin{equation}
+            H(y; \tilde{\sigma}, \xi) = 1 - \left( 1 + \frac{\xi y}{\tilde{\sigma}} \right)_+^{-1/\xi}
+        \end{equation}
+        Donde:
+        \begin{itemize}
+            \item $\tilde{\sigma} > 0$ es el parámetro de escala, y
+            \item $\xi \in \mathbb{R}$ es el parámetro de forma.
+        \end{itemize}
+        \cite{coles2001introduction}
+    \end{itemize}
+    Los valores de los parámetros $\sigma$ y $\hat{\sigma}$ describen la escala de los datos extremos en los enfoques de máximos por bloques y por umbrales, respectivamente. Por otro lado, 
+    la forma de los datos extremos (ver la forma de las colas de las distribuciones) está condicionada por el parámetro $\xi$ en ambos enfoques.
+    
+    
+    
+    \item \textbf{Modelamiento de Valores Extremos como Procesos Puntuales Marcados: EVGAM con familia de distribución GPD}
+    
+    Dentro de los dos enfoques en la Teoría de Valores Extremos el mejor método para aprovechar la información de los datos extremos que superen un umbral crítico, es el método de Umbral (POT), ya que 
+    permite modelar los datos extremos disponibles en la serie de datos. No obstante, los procesos generadores de datos extremos frecuentemente exhiben un comportamiento no estacionario, donde los parámetros 
+    de las distribuciones límite varían en función de variables indexadoras o covariables externas. Por lo tanto, para lograr capturar estos efectos y variaciones en los parámetros de la distribución, se propone 
+    el modelamiento del Proceso Puntual Marcado de los datos extremos mediante un Modelo Aditivo Generalizado.
+    \begin{enumerate}
+        \item \textbf{Modelo Aditivo Generalizado:} Este tipo de modelo se inspira de los Modelos Lineales Generalizados (GLM), pero permite que los parámetros de la distribución de probabilidad de la variable respuesta 
+        dependan por una función enlace a una combinación lineal de funciones suaves que dependen de las covariables con el objetivo que se cumplan las restricciones de los parámetros de la distribución 
+        y se tenga mayor poder predictivo.
+        \item \textbf{Representación por Bases:} Al ser una combiinación lineal de funciones suaves, estas funciones pueden representarse mediante una combinación lineal de bases.
+        \begin{equation*}
+            \eta_*(x)=\beta_0+\sum_{k=1}^{K}\sum_{d=1}^{D_k} \beta_{k,d} b_{k,d}(x)
+        \end{equation*}
+        Donde $\eta_*(x)$ es el predictor aditivo asociado al parámetro $\mu(x)$ que depende de un vector de covariables de dimensión K, y para cada componente del vector de covariables se considera una base de funciones
+        predefinidas y conocidas de dimensión $D_k$. 
+        \item \textbf{Caracterización del Proceso Puntual de Excedencias}
+        \item \textbf{Máxima Verosimilitud Penalizada:} 
+    \end{enumerate}
+    \cite{youngman2022evgam}
+\end{enumerate} 
+
+
+\textbf{Observación:} Para esta sección se sugiere un máximo del 20\% de la extensión del documento, de esta manera, se dará mayor énfasis al trabajo realizado propiamente por el estudiante.

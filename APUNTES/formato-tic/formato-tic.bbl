@@ -1,0 +1,45 @@
+\begin{thebibliography}{1}
+
+\bibitem{cqf2024extreme}
+{Certificate in Quantitative Finance (CQF)}.
+\newblock What is {Extreme Value Theory}?
+\newblock
+  \url{https://www.cqf.com/blog/quant-finance-101/what-is-extreme-value-theory},
+  2024.
+\newblock Accedido en julio de 2026. Análisis introductorio sobre el enfoque
+  Block Maxima y Peaks Over Threshold (POT).
+
+\bibitem{coles2001introduction}
+Stuart Coles.
+\newblock {\em An Introduction to Statistical Modeling of Extreme Values}.
+\newblock Springer Science \& Business Media, London, 2001.
+\newblock El Capítulo 3 sustenta la GEVD y el Teorema de
+  Fisher-Tippett-Gnedenko. El Capítulo 4 detalla el método POT y la GPD.
+
+\bibitem{daley2003introduction}
+Daryl~J. Daley and David Vere-Jones.
+\newblock {\em An Introduction to the Theory of Point Processes: Volume I:
+  Elementary Theory and Methods}.
+\newblock Springer Science \& Business Media, 2003.
+
+\bibitem{daley2008introduction}
+Daryl~J. Daley and David Vere-Jones.
+\newblock {\em An Introduction to the Theory of Point Processes: Volume II:
+  General Theory and Structure}.
+\newblock Springer Science \& Business Media, New York, 2nd edition, 2008.
+
+\bibitem{moraga2023spatial}
+Paula Moraga.
+\newblock {\em Spatial Statistics for Data Science: Theory and Applications
+  with {R}}.
+\newblock CRC Press, Boca Raton, 2023.
+\newblock El Capítulo sobre Complete Spatial Randomness detalla las pruebas de
+  hipótesis y funciones diagnósticas para el modelamiento de patrones
+  puntuales.
+
+\bibitem{youngman2022evgam}
+Benjamin~D. Youngman.
+\newblock evgam: An {R} package for generalized additive extreme value models.
+\newblock {\em Journal of Statistical Software}, 103(3):1--26, July 2022.
+
+\end{thebibliography}

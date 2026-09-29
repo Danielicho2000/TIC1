@@ -1,0 +1,1276 @@
+---
+title: "Análisis de Valores Extremos en Datos Sísmicos"
+author: "Daniel Lara "
+format: 
+  pdf:
+    toc: true
+    number-sections: true
+    colorlinks: true
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r, echo=FALSE}
+# Carga de librerías
+library(tidyverse)
+library(sf)
+library(ggplot2)
+library(lubridate)
+library(patchwork)
+library(evd)
+library(ismev)
+library(evgam)
+library(mgcv)
+library(tseries)
+library(extRemes)
+library(scales)
+library(geosphere)
+library(tidyr)
+library(dplyr)
+
+# Cargar datos
+datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismicevents.rds")
+
+datos <- datos %>%
+  st_drop_geometry() %>% 
+  mutate(time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")) %>%
+  arrange(time) %>% filter(tolower(magType) %in% c("mw", "mwc", "mwb", "mww", "mwr", "mwp"))
+
+#dim 12452 x 8
+```
+
+Trataremos los datos con tipo de magnitud de momento mw y sus variantes instrumentales directas que no saturan, como `mwc`, `mwb`, `mww`, `mwr` o `mwp`
+
+### La Ley de Gutenberg-Richter (G-R)
+
+$$log_{10}N(M)=a-bM$$
+
+- $N(M)$ es el número acumulado de sismos con una magnitud mayor o igual a $M$.
+
+- $a$ es una constante que indica la tasa de sismicidad total de la región (un valor más alto significa mayor actividad sísmica general).
+
+- $b$ (conocido como el *b-value*) es una constante que describe la proporción entre sismos pequeños y grandes.
+
+La de Gutenber-Ritcher dicta que los datos deberían formar una línea recta perfecta.
+
+```{r}
+estimar_mc_maxc <- function(magnitudes, bin_width = 0.1, correccion = 0.2) {
+  
+  # 1. Agrupar las magnitudes en bins (ej. 2.1, 2.2, 2.3)
+  frecuencias <- magnitudes %>%
+    enframe(name = NULL, value = "mag") %>%
+    mutate(mag_bin = round(mag / bin_width) * bin_width) %>%
+    count(mag_bin, name = "frecuencia") %>%
+    arrange(mag_bin)
+  
+  # 2. Encontrar el bin con la frecuencia máxima (el pico de la curva)
+  mc_bruto <- frecuencias %>%
+    filter(frecuencia == max(frecuencia)) %>%
+    pull(mag_bin) %>%
+    min() # Usamos min() en caso de que haya un empate en el pico
+  
+  # 3. Aplicar corrección de seguridad recomendada en la literatura
+  mc_estimado <- mc_bruto + correccion
+  
+  return(mc_estimado)
+}
+
+# --- Aplicación a los datos ---
+
+# 1. Estimar el umbral
+umbral_mc <- estimar_mc_maxc(datos$magnitude)
+```
+
+```{r}
+graficar_gr <- function(magnitudes, bin_width = 0.1, mc = NULL) {
+  
+  # 1. Preparar los datos: calcular frecuencias no acumuladas y acumuladas
+  df_frecuencias <- tibble(mag = magnitudes) %>%
+    # Agrupar en intervalos (bins)
+    mutate(mag_bin = round(mag / bin_width) * bin_width) %>%
+    # Contar la frecuencia no acumulada en cada bin
+    count(mag_bin, name = "frec_no_acumulada") %>%
+    # Ordenar de mayor a menor magnitud para calcular la acumulada correctamente
+    arrange(desc(mag_bin)) %>%
+    mutate(frec_acumulada = cumsum(frec_no_acumulada)) %>%
+    # Volver a ordenar de menor a mayor para el gráfico
+    arrange(mag_bin)
+  
+  # 2. Construir el gráfico con ggplot2
+  p <- ggplot(df_frecuencias) +
+    
+    # Puntos de frecuencia no acumulada (suele graficarse en gris o con círculos vacíos)
+    geom_point(aes(x = mag_bin, y = frec_no_acumulada), 
+               color = "gray50", shape = 1, size = 2) +
+    
+    # Puntos de frecuencia acumulada (la verdadera relación Gutenberg-Richter)
+    geom_point(aes(x = mag_bin, y = frec_acumulada), 
+               color = "darkblue", shape = 16, size = 2) +
+    
+    # Transformar el eje Y a escala logarítmica (base 10)
+    scale_y_log10(
+      breaks = trans_breaks("log10", function(x) 10^x),
+      labels = trans_format("log10", math_format(10^.x))
+    ) +
+    
+    # Etiquetas y diseño
+    labs(
+      title = "Ley de Gutenberg-Richter",
+      subtitle = "Distribución de Frecuencia-Magnitud (FMD)",
+      x = "Magnitud (M)",
+      y = expression(log[10] ~ N)
+    ) +
+    theme_minimal() +
+    theme(
+      plot.title = element_text(face = "bold", size = 14),
+      axis.title = element_text(face = "bold")
+    )
+  
+  # 3. Añadir una línea vertical para Mc si el usuario provee el valor
+  if (!is.null(mc)) {
+    p <- p + 
+      geom_vline(xintercept = mc, color = "red", linetype = "dashed", size = 0.8) +
+      annotate("text", x = mc + 0.1, y = max(df_frecuencias$frec_acumulada), 
+               label = paste("Mc =", mc), color = "red", hjust = 0, fontface = "bold")
+  }
+  
+  return(p)
+}
+```
+
+```{r}
+graficar_gr(datos$magnitude, mc=umbral_mc)
+```
+
+A partir del valor mínimo de $M_c$ (magnitud de completitud), la ley de G-R se aproxima a cumplirse, por ende, se debe trabajar con los datos por encima de de este valor. Logrando que se garantice el supuesto de Poisson y será más práctica la implementación de los modelos.
+
+```{r}
+Mc <- umbral_mc
+datos<- datos[datos$magnitude >= Mc, ]
+cat("Eventos con M >=", Mc, ":", nrow(datos), "\n")
+```
+
+### Diagnóstico de Independencia y Declustering
+
+#### Prueba de Independencia temporal
+
+```{r}
+# ============================================================
+# VERIFICACIÓN DE DEPENDENCIA (M >= 5.4)
+# ============================================================
+
+# 1. Ordenar por tiempo
+datos_completos <- datos[order(datos$time), ]
+
+# 2. Asegurar que time sea POSIXct
+if (!inherits(datos_completos$time, "POSIXct")) {
+  datos_completos$time <- as.POSIXct(datos_completos$time, tz = "GMT")
+}
+
+# 3. Calcular tiempos entre eventos
+tiempos <- as.numeric(diff(datos_completos$time))
+tiempos <- tiempos[!is.na(tiempos) & tiempos > 0]
+
+cat("=== VERIFICACIÓN DE DEPENDENCIA (M >= 5.4) ===\n\n")
+cat("N eventos:", nrow(datos_completos), "\n")
+cat("N intervalos válidos:", length(tiempos), "\n")
+cat("Media de tiempo entre eventos (días):", round(mean(tiempos), 2), "\n")
+cat("Mediana de tiempo entre eventos (días):", round(median(tiempos), 2), "\n\n")
+
+# --- 1. Índice de dispersión ---
+tiempo_total <- as.numeric(difftime(max(datos_completos$time), 
+                                    min(datos_completos$time), units = "days"))
+n_bins <- max(5, ceiling(tiempo_total / 365))
+bins <- cut(as.numeric(datos_completos$time), breaks = n_bins, labels = FALSE)
+conteos <- as.numeric(table(bins))
+
+idx_disp <- var(conteos) / mean(conteos)
+
+cat("--- 1. Índice de Dispersión ---\n")
+cat("  Bins (años):", n_bins, "\n")
+cat("  Media por bin:", round(mean(conteos), 3), "\n")
+cat("  Varianza:", round(var(conteos), 3), "\n")
+cat("  Índice:", round(idx_disp, 3), "\n")
+cat("  →", ifelse(abs(idx_disp - 1) < 0.3, "POISSON", 
+                  ifelse(idx_disp > 1, "CLUSTERING ", "REGULAR")), "\n\n")
+
+# --- 2. Test de Rachas (manual) ---
+cat("--- 2. Test de Rachas ---\n")
+mediana <- median(tiempos)
+secuencia <- tiempos > mediana
+n1 <- sum(secuencia)
+n2 <- sum(!secuencia)
+
+if (n1 > 0 && n2 > 0) {
+  cambios <- sum(diff(as.integer(secuencia)) != 0)
+  R <- cambios + 1
+  
+  mu_R <- (2 * n1 * n2) / (n1 + n2) + 1
+  var_R <- (2 * n1 * n2 * (2 * n1 * n2 - n1 - n2)) / 
+    ((n1 + n2)^2 * (n1 + n2 - 1))
+  
+  if (var_R > 0) {
+    Z <- (R - mu_R) / sqrt(var_R)
+    p_valor <- 2 * (1 - pnorm(abs(Z)))
+    
+    cat("  Rachas observadas:", R, "\n")
+    cat("  Rachas esperadas:", round(mu_R, 1), "\n")
+    cat("  Estadístico Z:", round(Z, 4), "\n")
+    cat("  p-valor:", round(p_valor, 4), "\n")
+    cat("  →", ifelse(p_valor > 0.05,"INDEPENDIETE","DEPENDIENTE"), "\n\n")
+  }
+} else {
+  cat("  No hay suficiente variabilidad\n\n")
+}
+
+```
+
+Los datos son dependientes.
+
+#### Declustering
+
+```{r}
+verificar_independencia <- function(catalogo, nombre = "Catálogo") {
+  # 1. Ordenar y limpiar
+  catalogo <- catalogo[order(catalogo$time), ]
+  catalogo <- catalogo[!is.na(catalogo$time), ]
+  tiempos <- as.numeric(diff(catalogo$time))
+  tiempos <- tiempos[!is.na(tiempos) & tiempos > 0]
+  
+  cat("N eventos:", nrow(catalogo), "\n")
+  cat("N intervalos válidos:", length(tiempos), "\n")
+  cat("Media de tiempo entre eventos (días):", round(mean(tiempos), 3), "\n")
+  cat("Mediana:", round(median(tiempos), 3), "\n\n")
+  
+  # --- 1. Índice de Dispersión ---
+  cat("--- 1. Índice de Dispersión ---\n")
+  tiempo_total <- as.numeric(difftime(max(catalogo$time), 
+                                      min(catalogo$time), units = "days"))
+  n_bins <- max(5, ceiling(tiempo_total / 365))
+  bins <- cut(as.numeric(catalogo$time), breaks = n_bins, labels = FALSE)
+  conteos <- as.numeric(table(bins))
+  idx <- var(conteos) / mean(conteos)
+  
+  cat("  Bins (años):", n_bins, "\n")
+  cat("  Media por bin:", round(mean(conteos), 3), "\n")
+  cat("  Varianza:", round(var(conteos), 3), "\n")
+  cat("  Índice:", round(idx, 3), "\n")
+  cat("  →", ifelse(abs(idx - 1) < 0.3, "POISSON ", 
+                    ifelse(idx > 1, "CLUSTERING ", "REGULAR")), "\n\n")
+  
+  # --- 2. Test de Rachas (manual) ---
+  cat("--- 2. Test de Rachas ---\n")
+  mediana <- median(tiempos)
+  secuencia <- tiempos > mediana
+  n1 <- sum(secuencia)
+  n2 <- sum(!secuencia)
+  
+  if (n1 > 0 && n2 > 0) {
+    cambios <- sum(diff(as.integer(secuencia)) != 0)
+    R <- cambios + 1
+    
+    mu_R <- (2 * n1 * n2) / (n1 + n2) + 1
+    var_R <- (2 * n1 * n2 * (2 * n1 * n2 - n1 - n2)) / 
+      ((n1 + n2)^2 * (n1 + n2 - 1))
+    
+    if (var_R > 0) {
+      Z <- (R - mu_R) / sqrt(var_R)
+      p_valor <- 2 * (1 - pnorm(abs(Z)))
+      
+      cat("  Rachas observadas:", R, "\n")
+      cat("  Rachas esperadas:", round(mu_R, 1), "\n")
+      cat("  Estadístico Z:", round(Z, 4), "\n")
+      cat("  p-valor:", round(p_valor, 4), "\n")
+      cat("  →", ifelse(p_valor > 0.05, "INDEPENDIENTE", "DEPENDIENTE "), "\n\n")
+    } else {
+      cat("  No se puede calcular (varianza cero)\n\n")
+    }
+  } else {
+    cat("  No hay suficiente variabilidad\n\n")
+  }
+  
+  # --- 3. Test KS (exponencial) ---
+  cat("--- 3. Test Kolmogorov-Smirnov (Exponencial) ---\n")
+  lambda_ks <- 1 / mean(tiempos)
+  ks <- suppressWarnings(ks.test(tiempos, "pexp", rate = lambda_ks))
+  cat("  Estadístico D:", round(ks$statistic, 4), "\n")
+  cat("  p-valor:", round(ks$p.value, 4), "\n")
+  cat("  →", ifelse(ks$p.value > 0.05, "EXPONENCIAL ", "NO EXPONENCIAL "), "\n\n")
+  
+  return(invisible(list(idx_disp = idx, ks_p = ks$p.value)))
+}
+library(dbscan)
+
+dbscan_decluster <- function(datos, 
+                             eps_esp = 30,      # Radio espacial en km
+                             eps_temp = 15,     # Radio temporal en días
+                             minPts = 3,        # Mínimo de eventos para formar clúster
+                             Mc = 5.4,          # Magnitud de completitud
+                             verbose = TRUE) {
+  
+  # --- 1. Filtrar y ordenar ---
+  datos <- datos[datos$magnitude >= Mc, ]
+  datos <- datos[order(datos$time), ]
+  n <- nrow(datos)
+  
+  if (verbose) cat("N eventos (M >=", Mc, "):", n, "\n")
+  
+  if (n < 10) stop("Muy pocos eventos para declusterizar")
+  
+  # --- 2. Construir coordenadas espacio-temporales ---
+  # Convertir grados a km (aproximación local)
+  x_km <- datos$longitude * 111 * cos(datos$latitude * pi / 180)
+  y_km <- datos$latitude * 111
+  
+  # Tiempo en días desde el primer evento
+  t_dias <- as.numeric(difftime(datos$time, min(datos$time), units = "days"))
+  
+  # Escalar el tiempo para que tenga la misma "unidad" que el espacio
+  # Si eps_esp = 30 km y eps_temp = 15 días, entonces 1 día = 30/15 = 2 km
+  factor_tiempo <- eps_esp / eps_temp
+  t_escalado <- t_dias * factor_tiempo
+  
+  # Matriz de coordenadas (x, y, t) en unidades comparables
+  coords <- cbind(x_km, y_km, t_escalado)
+  
+  if (verbose) {
+    cat("Coordenadas espacio-temporales construidas.\n")
+    cat("Factor de escalado temporal:", round(factor_tiempo, 3), "km/día\n")
+    cat("eps_esp =", eps_esp, "km | eps_temp =", eps_temp, "días\n")
+    cat("minPts =", minPts, "\n\n")
+  }
+  
+  # --- 3. Aplicar DBSCAN ---
+  db <- dbscan(coords, eps = eps_esp, minPts = minPts)
+  
+  datos$cluster <- db$cluster
+  
+  # --- 4. Estadísticas ---
+  n_clusters <- length(unique(db$cluster[db$cluster > 0]))
+  n_ruido <- sum(db$cluster == 0)
+  n_en_clusters <- sum(db$cluster > 0)
+  
+  if (verbose) {
+    cat("=== RESULTADOS DBSCAN ===\n")
+    cat("Clústeres formados:", n_clusters, "\n")
+    cat("Eventos en clústeres:", n_en_clusters, "\n")
+    cat("Eventos ruido (fondo puro):", n_ruido, "\n\n")
+  }
+  
+  # --- 5. Reducir cada clúster a su mainshock (mayor magnitud) ---
+  # Los eventos ruido (cluster = 0) se mantienen tal cual
+  datos_decl <- do.call(rbind, lapply(split(datos, datos$cluster), function(g) {
+    if (g$cluster[1] == 0) {
+      # Eventos ruido: mantener todos (son fondo puro)
+      return(g)
+    } else {
+      # Clúster: quedarse solo con el de mayor magnitud
+      return(g[which.max(g$magnitude), ])
+    }
+  }))
+  
+  # Reordenar por tiempo
+  datos_decl <- datos_decl[order(datos_decl$time), ]
+  
+  if (verbose) {
+    cat("Eventos declusterizados:", nrow(datos_decl), "\n")
+    cat("Reducción:", round(1 - nrow(datos_decl) / n, 3), "\n")
+  }
+  
+  # --- 6. Retornar resultado ---
+  return(datos_decl)
+}
+```
+
+```{r, echo=FALSE}
+# ============================================================
+# OPCIÓN B: PERÍODO HOMOGÉNEO 1980-PRESENTE
+# ============================================================
+
+# 1. Filtrar por fecha
+fecha_inicio <- as.POSIXct("1980-01-01 00:00:00", tz = "GMT")
+datos_recientes <- datos_completos[datos_completos$time >= fecha_inicio, ]
+
+cat("=== FILTRO 1980-PRESENTE ===\n")
+cat("Eventos originales (M >= 5.4):", nrow(datos_completos), "\n")
+cat("Eventos 1980+ (M >= 5.4):", nrow(datos_recientes), "\n")
+cat("Reducción:", round(1 - nrow(datos_recientes) / nrow(datos_completos), 3), "\n\n")
+
+# 2. Verificar homogeneidad temporal (eventos por año)
+años_r <- as.numeric(format(datos_recientes$time, "%Y"))
+tabla_años <- table(años_r)
+
+cat("=== EVENTOS POR AÑO (1980+) ===\n")
+print(tabla_años)
+
+# CV entre años
+cv_r <- sd(tabla_años) / mean(tabla_años)
+cat("\nCV entre años:", round(cv_r, 3), "\n")
+cat("CV esperado Poisson:", round(1/sqrt(mean(tabla_años)), 3), "\n\n")
+
+# Gráfico
+barplot(tabla_años, main = "Eventos por año (1980+, M >= 5.4)",
+        xlab = "Año", ylab = "N eventos", col = "steelblue",
+        las = 2, cex.names = 0.7)
+
+# 3. Verificar magnitud media por año (debe ser estable)
+mag_por_año <- tapply(datos_recientes$magnitude, años_r, mean)
+
+cat("\n=== MAGNITUD MEDIA POR AÑO ===\n")
+print(round(mag_por_año, 2))
+
+plot(as.numeric(names(mag_por_año)), mag_por_año, type = "b",
+     main = "Magnitud media por año (1980+)",
+     xlab = "Año", ylab = "Magnitud media", pch = 20, col = "steelblue")
+abline(h = mean(datos_recientes$magnitude), col = "red", lty = 2)
+
+# 4. Verificar independencia
+verificar_independencia(datos_recientes, "1980+ (M >= 5.4)")
+```
+
+```{r}
+# ============================================================
+# DECLUSTERING CON ZALIAPIN et al. (2008)
+# ============================================================
+decluster_zaliapin <- function(datos, Mc = 5.4, df = 1.6, b = 1.0, verbose = TRUE) {
+  
+  # --- 1. Filtrar y ordenar ---
+  datos <- datos[datos$magnitude >= Mc, ]
+  datos <- datos[order(datos$time), ]
+  datos$id <- 1:nrow(datos)
+  n <- nrow(datos)
+  
+  if (verbose) cat("N eventos (M >=", Mc, "):", n, "\n")
+  
+  if (n < 10) stop("Muy pocos eventos para declusterizar")
+  
+  # --- 2. Matriz de distancias espaciales (km) ---
+  # Convertir grados a km (aproximación local)
+  coords <- cbind(
+    datos$longitude * 111 * cos(datos$latitude * pi / 180),
+    datos$latitude * 111
+  )
+  dist_matrix <- as.matrix(dist(coords))
+  
+  # --- 3. Tiempos en días ---
+  tiempos <- as.numeric(difftime(datos$time, min(datos$time), units = "days"))
+  
+  # --- 4. Calcular n*_j, T_j, R_j ---
+  n_star <- rep(Inf, n)
+  i_star <- rep(NA, n)
+  
+  for (j in 2:n) {
+    for (i in 1:(j-1)) {
+      dt <- tiempos[j] - tiempos[i]
+      if (dt <= 0) next
+      
+      r_ij <- dist_matrix[i, j]
+      if (r_ij < 0.01) r_ij <- 0.01  # Evitar log(0)
+      
+      # Ecuación 17: n_ij = (t_j - t_i) * r_ij^df * 10^(-b * m_i)
+      n_ij <- dt * (r_ij^df) * (10^(-b * datos$magnitude[i]))
+      
+      if (n_ij < n_star[j]) {
+        n_star[j] <- n_ij
+        i_star[j] <- i
+      }
+    }
+  }
+  
+  # --- 5. Calcular T_j y R_j (Ecuaciones 18 y 19) ---
+  T_j <- rep(NA, n)
+  R_j <- rep(NA, n)
+  
+  for (j in 2:n) {
+    if (!is.na(i_star[j])) {
+      i <- i_star[j]
+      dt <- tiempos[j] - tiempos[i]
+      r_ij <- dist_matrix[i, j]
+      if (r_ij < 0.01) r_ij <- 0.01
+      
+      # T_j = (t_j - t_i*) * 10^(-b * m_i* / 2)
+      T_j[j] <- dt * (10^(-b * datos$magnitude[i] / 2))
+      
+      # R_j = r_ij^df * 10^(-b * m_i* / 2)
+      R_j[j] <- (r_ij^df) * (10^(-b * datos$magnitude[i] / 2))
+    }
+  }
+  
+  # --- 6. Añadir a datos ---
+  datos$T_j <- T_j
+  datos$R_j <- R_j
+  datos$i_star <- i_star
+  datos$logT <- log10(T_j)
+  datos$logR <- log10(R_j)
+  
+  if (verbose) {
+    cat("Cálculo completado.\n")
+    cat("Rango de logT:", round(range(datos$logT, na.rm = TRUE), 2), "\n")
+    cat("Rango de logR:", round(range(datos$logR, na.rm = TRUE), 2), "\n")
+  }
+  
+  return(datos)
+}
+```
+
+```{r}
+# --- APLICAR ZALIAPIN AL CATÁLOGO 1980+ ---
+resultado_zal_1980 <- decluster_zaliapin(datos_recientes, Mc = 5.4, df = 1.6, b = 1.0)
+
+# Gráfico T-R
+library(ggplot2)
+ggplot(resultado_zal_1980[!is.na(resultado_zal_1980$logT), ], 
+       aes(x = logT, y = logR)) +
+  geom_point(alpha = 0.3, size = 0.6, color = "steelblue") +
+  geom_vline(xintercept = -2.5, linetype = "dashed", color = "red") +
+  labs(title = "Zaliapin (1980+, Mc = 5.4)",
+       x = "log10(T)", y = "log10(R)") +
+  theme_minimal()
+
+# Histograma
+hist(resultado_zal_1980$logT, breaks = 50,
+     main = "log10(T) - 1980+",
+     xlab = "log10(T)", col = "steelblue")
+abline(v = -2.5, col = "red", lty = 2, lwd = 2)
+
+# --- O APLICAR DBSCAN ---
+cat_decl_dbscan_1980 <- dbscan_decluster(datos_recientes, 
+                                         eps_esp = 30, eps_temp = 15, 
+                                         minPts = 3, Mc = 5.4)
+
+# Verificar independencia
+verificar_independencia(cat_decl_dbscan_1980, "DBSCAN (1980+, eps=30, temp=15)")
+```
+
+```{r}
+# ============================================================
+# DECLUSTERING HÍBRIDO: DBSCAN + VENTANAS GK AMPLIADAS
+# ============================================================
+
+decluster_hibrido <- function(datos, Mc = 5.4, factor_ampliacion = 3) {
+  
+  # --- 1. Filtrar y ordenar ---
+  datos <- datos[datos$magnitude >= Mc, ]
+  datos <- datos[order(datos$time), ]
+  n <- nrow(datos)
+  
+  cat("N eventos (M >=", Mc, "):", n, "\n")
+  
+  # --- 2. Identificar grandes terremotos (M >= 7.5) ---
+  grandes <- which(datos$magnitude >= 7.5)
+  cat("Grandes terremotos (M >= 7.5):", length(grandes), "\n")
+  
+  # --- 3. Marcar réplicas de grandes terremotos con ventanas GK ampliadas ---
+  es_aftershock <- rep(FALSE, n)
+  
+  for (i in grandes) {
+    M_i <- datos$magnitude[i]
+    
+    # Ventanas GK ampliadas
+    d_km <- 10^(0.1238 * M_i + 0.983) * factor_ampliacion
+    if (M_i >= 6.5) {
+      t_dias <- 10^(0.032 * M_i + 2.7389) * factor_ampliacion
+    } else {
+      t_dias <- 10^(0.5409 * M_i - 0.547) * factor_ampliacion
+    }
+    
+    cat(sprintf("  Mainshock M%.1f: d=%.0f km, t=%.0f días\n", 
+                M_i, d_km, t_dias))
+    
+    # Buscar réplicas posteriores
+    for (j in (i+1):n) {
+      if (j > n) break
+      if (es_aftershock[j]) next
+      
+      dt <- as.numeric(difftime(datos$time[j], datos$time[i], units = "days"))
+      if (dt > t_dias) break
+      
+      dx <- (datos$longitude[j] - datos$longitude[i]) * 111 * 
+        cos(datos$latitude[i] * pi / 180)
+      dy <- (datos$latitude[j] - datos$latitude[i]) * 111
+      dist_km <- sqrt(dx^2 + dy^2)
+      
+      if (dist_km <= d_km) {
+        es_aftershock[j] <- TRUE
+      }
+    }
+  }
+  
+  cat("\nRéplicas de grandes terremotos identificadas:", sum(es_aftershock), "\n")
+  
+  # --- 4. Eliminar esas réplicas ---
+  datos_sin_grandes <- datos[!es_aftershock, ]
+  cat("Eventos restantes después de eliminar réplicas de M >= 7.5:", 
+      nrow(datos_sin_grandes), "\n")
+  
+  # --- 5. Aplicar DBSCAN al catálogo restante ---
+  cat("\n=== APLICANDO DBSCAN AL CATÁLOGO RESTANTE ===\n")
+  cat_decl_final <- dbscan_decluster(datos_sin_grandes, 
+                                     eps_esp = 30, 
+                                     eps_temp = 15, 
+                                     minPts = 3, 
+                                     Mc = Mc,
+                                     verbose = TRUE)
+  
+  return(cat_decl_final)
+}
+
+# ============================================================
+# APLICAR
+# ============================================================
+
+cat_decl_final <- decluster_hibrido(datos_recientes, Mc = 5.4, factor_ampliacion = 3)
+
+# ============================================================
+# VERIFICAR INDEPENDENCIA
+# ============================================================
+
+verificar_independencia(cat_decl_final, "Declustering Híbrido (GK ampliado + DBSCAN)")
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+#### Diágnostico del PP
+
+```{r}
+# Diagnóstico PRE-declustering
+tiempos_pre <- diff(as.numeric(extremos_limpios$time)) / (3600 * 24)
+
+qqplot(
+  qexp(ppoints(length(tiempos_pre))),
+  tiempos_pre,
+  main = "",
+  xlab = "Cuantiles Teóricos Exponenciales",
+  ylab = "Días entre Excedencias",
+  pch = 20, col = "blue", cex = 0.5
+)
+qqline(tiempos_pre, distribution = qexp, col = "red", lwd = 2)
+```
+
+### Análisis de Picos sobre el Umbral (POT)
+
+Seleccionar el umbral óptimo **(**$u$) a partir del cual se ajustará la Distribución Generalizada de Pareto (GPD).
+
+```{r}
+# Gráfico de Vida Media Remanente
+mrlplot(datos$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
+# Gráfico de elección de umbral (tcplot)
+limites_umbral <- quantile(datos$magnitude, probs = c(0.05, 0.95))
+tcplot(datos$magnitude, tlim=limites_umbral)
+```
+
+Se toma un umbral entre 5 a 6, se tomará el valor de $\mu=5$\
+Se evidencia posiblemente que el parámetro $\xi<0$ mostrando que las colas serán ligeras con un límite máximo.
+
+### Ajuste de parámetros con covariables
+
+EVGAM busca estimar los parámetros $\mu, \sigma, \xi$ por medio de combinaciones lineales con funciones llamadas B-splines que dependen de covariables (tiempo, magnitud, etc)
+
+$$\mu(t)=\sum_{j=1}^{k}\beta_jb_j(t)$$
+
+- $b_j(t)$ son las funciones base para estimar la función suave que describe la tendencia
+
+- $B_j$ parámetros libres que ajustan la Máxima Verosimilitud Penalizada (la forma como ajusta los parámetros)
+
+Existen distintas bases $b_k$ según el **bs** elegido:
+
+1.  **bs="cr",** cubic regression splines: Aqui cada $b_k$ es un polinomio cúbico con cada pico en cada nodo (punto de interés) dentro de un rango. POR RANGOS GENERARÁ LOS POLINOMIOS
+
+2.  **bs="tp"** Thin Plate Regression Splines: Maneja interacciones de múltiples variables de forma isótropica (suaviza el espacio por igual en todas las direcciones)
+
+    K: Límite superior de complejidad
+
+    $$\begin{aligned}
+    b_k(x)=r^2log(r) \\
+    r=||x-x_k||
+    \end{aligned}$$
+
+3.  **bs="cs"** Shrinkage: Similar a cr, con la diferencia que puede otorgar pesos a las variables dependiendo de su importancia.
+
+Dentro de la formula para el uso del modelo EVGAM tenemos tres tipo de interacciones de las covariables
+
+- $s(x)+s(y)$ Los efectos de x,y son independientes
+
+- $te(x,y)$ existe interacción completa entre x,y
+
+- $ti(x,y)$ cuantifica la interacción pura (se la complementa por ejemplo con $s(x)+s(y)$)
+
+```{r}
+excedencias_evgam <- catalogo_limpio %>%
+  filter(magnitude>5)%>%
+  mutate(
+    excess = magnitude - 5,
+    year_decimal = year(time) + (yday(time) / 365.25),
+    time_days = as.numeric(difftime(time, min(time), units = "days"))
+  ) %>%
+  as.data.frame()
+
+excedencias_evgam$dia_ano <- yday(excedencias_evgam$time)
+```
+
+#### Modelo 0: Scale constante
+
+```{r}
+fit_evgam0 <- evgam(
+  formula = list(excess ~ 1, ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+
+cat("=== MODELO 0: GPD ESTACIONARIO ===\n")
+summary(fit_evgam0)
+```
+
+```{r}
+pred_par <- predict(fit_evgam0, type = "response")
+sigma_hat <- as.numeric(pred_par[, 1])
+xi_hat    <- as.numeric(pred_par[, 2])
+y         <- as.numeric(excedencias_evgam$excess)
+# Empirical probabilities
+p <- ppoints(length(y))
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat) > 1e-8,
+  sigma_hat / xi_hat * ((1 - p)^(-xi_hat) - 1),
+  -sigma_hat * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+#### Modelo 1: Scale en función (lineal) del tiempo
+
+```{r}
+excedencias_evgam$time_years <- excedencias_evgam$time_days / 365.25
+fit_evgam_lineal <- evgam(
+  formula = list(excess ~ time_years, ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+pred_par1 <- predict(fit_evgam_lineal, type = "response")
+sigma_hat1 <- as.numeric(pred_par1[, 1])
+xi_hat1    <- as.numeric(pred_par1[, 2])
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat1) > 1e-8,
+  sigma_hat1 / xi_hat1 * ((1 - p)^(-xi_hat1) - 1),
+  -sigma_hat1 * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+cat("=== MODELO 2:  Tendencia temporal en la escala ===\n")
+summary(fit_evgam_lineal)
+```
+
+#### Modelo 2: Scale en función del tiempo con splines cúbicos
+
+```{r}
+fit_evgam1 <- evgam(
+  formula = list(excess ~ s(time_days, bs = "cs"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+pred_par1 <- predict(fit_evgam1, type = "response")
+sigma_hat1 <- as.numeric(pred_par1[, 1])
+xi_hat1    <- as.numeric(pred_par1[, 2])
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat1) > 1e-8,
+  sigma_hat1 / xi_hat1 * ((1 - p)^(-xi_hat1) - 1),
+  -sigma_hat1 * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+cat("=== MODELO 2:  Tendencia temporal en la escala ===\n")
+summary(fit_evgam1)
+```
+
+Lo que se puede rescatar aquí es el s(year_decimal) donde la escala $\sigma_t$ fue cambiando a lo largo del tiempo de formas drásticas, se evidencia por los grádos de liberdas efectivos cercanos a 8 (miden la complejidad real de una curva suave ajustada).
+
+El valor promedio de $\sigma_t$ es cercano a 0, lo que podría indicar que las excedencias son más predecibles
+
+```{r}
+plot(fit_evgam1, pages = 1, 
+     main = "Tendencia temporal en log(σ)",
+     xlab = "días", 
+     ylab = "s(year_decimal)",
+     se = TRUE,           # Bandas de confianza
+     shade = TRUE)        # Sombrear incertidumbre
+```
+
+Son los valores que aumentarán la varianza promedio a lo largo del tiempo, se los puede predecir y ver como irá cambiando la varianza.
+
+$$log(\sigma_t) = -0.42 + s(\text{year\_decimal})$$
+
+#### Modelo 3: Scale en función de Longitud y Latitud
+
+```{r}
+fit_espacial_1 <- evgam(
+  formula = list(excess ~ s(longitude, latitude, bs = "tp"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+summary(fit_espacial_1)
+```
+
+```{r}
+pred_par1 <- predict(fit_espacial_1, type = "response")
+sigma_hat1 <- as.numeric(pred_par1[, 1])
+xi_hat1    <- as.numeric(pred_par1[, 2])
+# Theoretical GPD quantiles
+q_theo <- ifelse(
+  abs(xi_hat1) > 1e-8,
+  sigma_hat1 / xi_hat1 * ((1 - p)^(-xi_hat1) - 1),
+  -sigma_hat1 * log(1 - p)
+)
+
+qqplot(q_theo, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+library(ggplot2)
+
+
+lon_min <- quantile(excedencias_evgam$longitude, 0.01, na.rm = TRUE)
+lon_max <- quantile(excedencias_evgam$longitude, 0.99, na.rm = TRUE)
+lat_min <- quantile(excedencias_evgam$latitude, 0.01, na.rm = TRUE)
+lat_max <- quantile(excedencias_evgam$latitude, 0.99, na.rm = TRUE)
+
+
+resolucion <- 200
+grilla_pura <- expand.grid(
+  longitude = seq(lon_min, lon_max, length.out = resolucion),
+  latitude  = seq(lat_min, lat_max, length.out = resolucion)
+)
+
+
+preds_grilla <- predict(fit_espacial_1, newdata = grilla_pura)
+grilla_pura$escala <- exp(preds_grilla$logscale)
+ggplot(grilla_pura, aes(x = longitude, y = latitude, fill = escala)) +
+  geom_tile() +
+  geom_contour(aes(z = escala), color = "white", alpha = 0.4, size = 0.3) +
+  scale_fill_viridis_c(option = "inferno", name = "Escala (σ)") +
+  coord_cartesian(xlim = c(lon_min, lon_max), ylim = c(lat_min, lat_max), expand = FALSE) +
+  
+  labs(
+    title = "Efecto Conjunto de la Longitud y Latitud en el Parámetro de Escala",
+    subtitle = "Superficie estimada mediante el spline bidimensional del EVGAM",
+    x = "Longitud",
+    y = "Latitud"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 12),
+    panel.grid = element_blank()
+  )
+```
+
+#### Modelo 4: Scale en función a la profundidad y distancia a fallas
+
+```{r}
+fit_espacial_2 <- evgam(
+  formula = list(excess ~ s(nearest_fault_dist, depth, bs = "tp"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+cat("=== MODELO 4:  Tendencia de profundidad y distancia a fallas en la escala ===\n")
+summary(fit_espacial_2)
+```
+
+```{r}
+pred_par2 <- predict(fit_espacial_2, type = "response")
+sigma_hat2 <- as.numeric(pred_par2[, 1])
+xi_hat2    <- as.numeric(pred_par2[, 2])
+# Theoretical GPD quantiles
+q_theo2 <- ifelse(
+  abs(xi_hat2) > 1e-8,
+  sigma_hat2 / xi_hat2 * ((1 - p)^(-xi_hat2) - 1),
+  -sigma_hat2 * log(1 - p)
+)
+
+qqplot(q_theo2, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+```{r}
+library(ggplot2)
+library(dplyr)
+
+# 1. Crear una grilla regular para evaluar el spline
+# Esto genera combinaciones de prueba cubriendo el rango de tus datos
+grid_datos <- expand.grid(
+  nearest_fault_dist = seq(min(excedencias_evgam$nearest_fault_dist, na.rm = TRUE),
+                           max(excedencias_evgam$nearest_fault_dist, na.rm = TRUE), 
+                           length.out = 100),
+  depth = seq(min(excedencias_evgam$depth, na.rm = TRUE),
+              max(excedencias_evgam$depth, na.rm = TRUE), 
+              length.out = 100)
+)
+
+# 2. Predecir los valores en la grilla usando tu nuevo modelo
+preds_grid <- predict(fit_espacial_2, newdata = grid_datos)
+
+# 3. Calcular el valor real de la escala (sigma = exp(logscale)) y unir a la grilla
+grid_datos$escala_sigma <- exp(preds_grid$logscale)
+
+# 4. Graficar el mapa de calor y contornos de la escala
+ggplot(grid_datos, aes(x = nearest_fault_dist, y = depth, z = escala_sigma)) +
+  # Mapa de calor de fondo
+  geom_tile(aes(fill = escala_sigma)) +
+  # Líneas de contorno con etiquetas del valor de la escala
+  geom_contour(color = "white", alpha = 0.6) +
+  scale_fill_viridis_c(option = "viridis", name = "Parámetro\nEscala (sigma)") +
+  # Invertir el eje Y es común en sismología para que el "suelo" esté arriba y el fondo abajo
+  scale_y_reverse() + 
+  labs(
+    title = "Efecto del Spline Físico en el Parámetro de Escala (GPD)",
+    subtitle = "Comportamiento de sigma según la profundidad y la distancia a la falla",
+    x = "Distancia a la Falla Más Cercana (unidades de tu dato)",
+    y = "Profundidad del Hipocentro (km)"
+  ) +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(face = "bold", size = 14),
+    legend.position = "right"
+  )
+```
+
+#### Modelo 5: Scale en función del tiempo y magnitudes espaciales
+
+```{r}
+fit_combinado <- evgam(
+  formula = list(excess ~ s(time_days, bs = "cs") +
+                   s(nearest_fault_dist, depth, by = time_days, bs = "tp"), ~ 1),
+  data = excedencias_evgam,
+  family = "gpd"
+)
+```
+
+```{r}
+cat("=== MODELO 5:  Tendencia temporal y espacial en la escala ===\n")
+summary(fit_combinado)
+```
+
+```{r}
+pred_par3 <- predict(fit_combinado, type = "response")
+sigma_hat3 <- as.numeric(pred_par3[, 1])
+xi_hat3    <- as.numeric(pred_par3[, 2])
+# Theoretical GPD quantiles
+q_theo3 <- ifelse(
+  abs(xi_hat3) > 1e-8,
+  sigma_hat3 / xi_hat3 * ((1 - p)^(-xi_hat3) - 1),
+  -sigma_hat3 * log(1 - p)
+)
+
+qqplot(q_theo3, y,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+#### Modelo 6: Sismos según su tipo: Ejemplo Momento Equivalente
+
+Hay distintos tipos de magnitudes observadas: Magnitudes de Momento (mw), Local o Ritcher (ml), Ondas de cuerpo (mb) y Superficie (ms), Duración (md) y otras. Notemos lo siguiente:
+
+```{r}
+conteo_magnitudes <- sort(table(excedencias_evgam$magType), decreasing = TRUE) 
+print(conteo_magnitudes)
+```
+
+Veamos si los tipos de magnitudes pueden meter ruido o sesgos debido a los efectos de saturación de escalas como mb o ml, con el objetivo que mostrar que las magnitudes mb se ve una saturación instrumental, es decir, pueden ser mayores a lo que realmente fueron.
+
+```{r}
+# Filtrar los dos grupos principales
+solo_mw <- subset(excedencias_evgam, magType %in% c("mw", "mwc", "mww"))
+solo_mb <- subset(excedencias_evgam, magType == "mb")
+
+
+# Graficar las densidades superpuestas
+plot(density(solo_mw$magnitude), col = "blue", main = "Comparación de Densidades (Excedencias)", 
+     xlab = "Magnitud", lwd = 2, xlim = c(min(excedencias_evgam$magnitude), max(excedencias_evgam$magnitude)))
+lines(density(solo_mb$magnitude), col = "red", lwd = 2)
+legend("topright", legend = c("Familia Mw (Sin saturación)", "Tipo mb (Saturada)"), 
+       col = c("blue", "red"), lty = 1, lwd = 2)
+```
+
+Se puede notar los sismos de tipo mb ya son irreconocibles cuando superan un cierto umbral. Por eso se recomienda trabajar para valores extremos con los sismos que tengan magnitudes tipo Mw, porque muestran el efecto real.
+
+```{r}
+fit_espacial_3 <- evgam(
+  formula = list(excess ~ s(nearest_fault_dist, depth, bs = "tp"),
+                 ~ 1),
+  data = solo_mw,
+  family = "gpd"
+)
+```
+
+```{r}
+cat("=== MODELO 6:  Tendencia de profundidad y distancia a fallas en la escala ===\n")
+summary(fit_espacial_3)
+```
+
+```{r}
+pred_par3 <- predict(fit_espacial_3, type = "response")
+sigma_hat3 <- as.numeric(pred_par3[, 1])
+xi_hat3    <- as.numeric(pred_par3[, 2])
+y3<- as.numeric(solo_mw$excess)
+p3 <- ppoints(length(y3))
+# Theoretical GPD quantiles
+q_theo3 <- ifelse(
+  abs(xi_hat3) > 1e-8,
+  sigma_hat3 / xi_hat3 * ((1 - p3)^(-xi_hat3) - 1),
+  -sigma_hat3 * log(1 - p3)
+)
+
+qqplot(q_theo3, y3,
+       main = "GPD QQ Plot",
+       xlab = "Theoretical",
+       ylab = "Observed")
+abline(0, 1, col = "red")
+```
+
+### Selección y Comparación de Modelos
+
+#### Criterios de Información y Verosimilitud Penalizada, para M0,M1,M2, M3,M4, M5 y M6
+
+```{r}
+tabla_comparativa <- data.frame(
+  Modelo = c("M0: GPD Estacionario", 
+             "M1: Tendencia Temporal Lineal (time_years)", 
+             "M2: Tendencia Temporal No Lineal s(time_days)",
+             "M3: Efecto Espacial s(longitude, latitude)",
+             "M4: Efecto Espacial s(nearest_fault_dist, depth)",
+             "M5: Efecto Espacial y Temporal",
+             "M6: Efecto Espacial s(nearest_fault_dist, depth), Magnitudes Mw"),
+  NLLH = c(fit_evgam0$logLik * -1, 
+           fit_evgam_lineal$logLik * -1, 
+           fit_evgam1$logLik * -1,
+           fit_espacial_1$logLik * -1,
+           fit_espacial_2$logLik *-1,
+           fit_combinado$logLik *-1,
+           fit_espacial_3$logLik *-1),
+  AIC = c(AIC(fit_evgam0), 
+          AIC(fit_evgam_lineal), 
+          AIC(fit_evgam1),
+          AIC(fit_espacial_1),
+          AIC(fit_espacial_2),
+          AIC(fit_combinado),
+          AIC(fit_espacial_3))
+)
+
+# Formatear salida para el reporte
+knitr::kable(tabla_comparativa, digits = 4, caption = "Métricas de Selección y Ajuste para Modelos de Excedencia")
+```
+
+#### Gráfico de Residuos Cruzados
+
+Contrastamos la distribución de los residuos de Cox-Snell estandarizados frente a la distribución teórica exponencial para los cinco escenarios de excedencia.
+
+$$R_t = \frac{1}{\hat{\xi}_t} \log \left( 1 + \hat{\xi}_t \frac{Y_t - u}{\hat{\sigma}_t} \right)$$
+
+Si los residuos llegan a ser iid, la distribución llega a converger a una exp(1).
+
+##### Demostración:
+
+Se sabe que: $Y=X-u \sim GDP(\sigma, \xi)$, y $U=F_Y(y)=1-(1+\frac{\xi y}{\sigma})^{\frac{-1}{\xi}} \sim Unif(0,1)$.
+
+Definimos: $R=-log(1-U)$
+
+$$\begin{aligned}
+P(R\leq r)=& P(-log(1-U)\leq r) \\
+=& P(1-U\geq e^{-r})\\
+=& P(U\leq 1-e^{-r})\\
+=& 1-e^{-r}
+\end{aligned}$$
+
+Así, notemos que:
+
+$$R=-log(1-U)=\frac{1}{\hat{\xi}} \log \left( 1 + \hat{\xi} \frac{Y - u}{\hat{\sigma}} \right) \sim \text{Exp}(1)$$
+
+Si los residuos llegan a ser iid, la distribución llega a converger a una exp(1).
+
+```{r}
+# 1. Obtener las predicciones de los parámetros para todos los modelos
+preds_m0 <- predict(fit_evgam0)
+preds_m1 <- predict(fit_evgam_lineal)
+preds_m2 <- predict(fit_evgam1)
+preds_m3 <- predict(fit_espacial_1)
+preds_m4 <- predict(fit_espacial_2)
+preds_m5 <- predict(fit_combinado) 
+preds_m6 <- predict(fit_espacial_3)
+
+# 2. Extraer parámetros de escala (scale = exp(logscale)) y forma (shape)
+# Modelo 0: Estacionario
+escala_m0 <- exp(preds_m0$logscale)
+shape_m0  <- preds_m0$shape
+
+# Modelo 1: Tendencia Lineal
+escala_m1 <- exp(preds_m1$logscale)
+shape_m1  <- preds_m1$shape
+
+# Modelo 2: Tendencia No Lineal (time_days)
+escala_m2 <- exp(preds_m2$logscale)
+shape_m2  <- preds_m2$shape
+
+# Modelo 3: Efecto Espacial (lon, lat)
+escala_m3 <- exp(preds_m3$logscale)
+shape_m3  <- preds_m3$shape
+
+# Modelo 4: Efecto Físico (dist, depth)
+escala_m4 <- exp(preds_m4$logscale)
+shape_m4  <- preds_m4$shape
+
+# Modelo Combinado: Tiempo + Física
+escala_m5 <- exp(preds_m5$logscale) 
+shape_m5  <- preds_m5$shape      
+
+# Modelo 6: Efecto Físico (dist, depth) con datos Mw
+escala_m6<- exp(preds_m6$logscale)
+shape_m6 <- preds_m6$shape
+
+# 3. Calcular el exceso real (Magnitud - Umbral)
+exceso_real <- excedencias_evgam$magnitud - 5.0 
+
+# 4. Transformación de Cox-Snell para residuales GPD estandarizados
+res_m0_std     <- (1 / shape_m0) * log(1 + shape_m0 * (exceso_real / escala_m0))
+res_m1_std     <- (1 / shape_m1) * log(1 + shape_m1 * (exceso_real / escala_m1))
+res_m2_std     <- (1 / shape_m2) * log(1 + shape_m2 * (exceso_real / escala_m2))
+res_m3_std     <- (1 / shape_m3) * log(1 + shape_m3 * (exceso_real / escala_m3))
+res_m4_std     <- (1 / shape_m4) * log(1 + shape_m4 * (exceso_real / escala_m4))
+res_m5_std <- (1 / shape_m5) * log(1 + shape_m5 * (exceso_real / escala_m5)) 
+res_m6_std     <- (1 / shape_m6) * log(1 + shape_m6 * (exceso_real / escala_m6))
+
+# 5. Construir el DataFrame integrado de residuos
+residuos_todos <- data.frame(
+  m0     = res_m0_std,
+  m1     = res_m1_std,
+  m2     = res_m2_std,
+  m3     = res_m3_std,
+  m4     = res_m4_std,
+  m5 = res_m5_std, 
+  m6= res_m6_std
+)
+
+# 6. Limpieza estricta: Filtrar filas con NAs, NaNs o valores infinitos 
+residuos_limpios <- residuos_todos[
+  complete.cases(residuos_todos) & 
+    is.finite(residuos_todos$m0) & 
+    is.finite(residuos_todos$m1) & 
+    is.finite(residuos_todos$m2) & 
+    is.finite(residuos_todos$m3) &
+    is.finite(residuos_todos$m4) &
+    is.finite(residuos_todos$m5) &
+    is.finite(residuos_todos$m6), 
+]
+```
+
+```{r}
+acf(residuos_limpios$m6, main = "ACF de los Residuos del Modelo M5", lag.max = 30)
+```
+
+##### Gráfico: Residuos vs Exp(1)
+
+```{r}
+# 7. Preparación de datos para ggplot (Formato Largo)
+n_obs <- nrow(residuos_limpios)
+teoricos_exp <- qexp(ppoints(n_obs))
+
+df_qq_long <- residuos_limpios %>%
+  mutate(teoricos = teoricos_exp) %>%
+  pivot_longer(cols = c(
+    m6,
+    # m5, 
+    #    m0, 
+    #    m1,
+    #    m2,
+    #    m3,
+    #m4
+  ), 
+  names_to = "Modelo", 
+  values_to = "Residual") %>%
+  group_by(Modelo) %>%
+  arrange(Residual) %>%
+  mutate(obs_sorted = Residual) %>%
+  ungroup()
+
+# 8. Gráfico de Densidades Comparativo
+ggplot(df_qq_long, aes(x = Residual, fill = Modelo, color = Modelo)) +
+  geom_density(alpha = 0.15) + # Bajé un poco el alpha para que se distingan mejor las 6 capas
+  stat_function(fun = dexp, args = list(rate = 1), 
+                color = "black", linetype = "dashed", size = 0.9) +
+  scale_fill_viridis_d(option = "plasma", 
+                       labels = c("m0" = "M0: Estacionario",
+                                  "m1" = "M1: Temporal Lineal",
+                                  "m2" = "M2: Temporal No Lineal",
+                                  "m3" = "M3: Espacial Puro",
+                                  "m4" = "M4: Físico Geológico",
+                                  "m5" = "M5: Espacio-Temporal Físico",
+                                  "m6" = "M6: Físico Geológico, datos Mw")) +
+  scale_color_viridis_d(option = "plasma", 
+                        labels = c("m0" = "M0: Estacionario",
+                                   "m1" = "M1: Temporal Lineal",
+                                   "m2" = "M2: Temporal No Lineal",
+                                   "m3" = "M3: Espacial Puro",
+                                   "m4" = "M4: Físico Geológico",
+                                   "m5" = "M5: Espacio-Temporal Físico",
+                                   "m6" = "M6: Físico Geológico, datos Mw")) +
+  coord_cartesian(xlim = c(0, 8), ylim = c(0, 1.2)) +
+  labs(title = "Forma del Error: Densidad de Residuos Estandarizados",
+       subtitle = "Comparación de los 7 modelos frente a la referencia teórica Exp(1)",
+       x = "Valor del Residuo",
+       y = "Densidad",
+       fill = "Modelos Evaluados",
+       color = "Modelos Evaluados") +
+  theme_minimal() +
+  theme(legend.position = "bottom",
+        legend.title = element_text(face = "bold"),
+        plot.title = element_text(face = "bold", size = 13))
+```
+
+El modelo M5 es el mejor desde el punto de vista de los residuos. Al incluir la componente Espaciales(profundiad, distancia a fallas) y además el factor temporal, el modelo logra corregir parte de la distorsión en los residuos de magnitudes bajas/moderadas que los modelos temporales y el estacionario no pueden resolver.
