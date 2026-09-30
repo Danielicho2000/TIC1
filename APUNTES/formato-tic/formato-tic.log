@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  29 SEP 2026 12:47
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  29 SEP 2026 20:57
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -568,12 +568,12 @@ l.45      \include{Capitulos-Anexos/cap-01}
 
  (Capitulos-Anexos/cap-02.tex
 Cap\'{\i }tulo 2.
-<imagenes/ST-sismos.png, id=186, 648.92438pt x 221.32687pt>
+<imagenes/ST-sismos.png, id=191, 648.92438pt x 221.32687pt>
 File: imagenes/ST-sismos.png Graphic file (type png)
 <use imagenes/ST-sismos.png>
 Package pdftex.def Info: imagenes/ST-sismos.png  used on input line 22.
 (pdftex.def)             Requested size: 204.85802pt x 69.8703pt.
-<imagenes/post ST-sismos.png, id=187, 648.92438pt x 221.32687pt>
+<imagenes/post ST-sismos.png, id=192, 648.92438pt x 221.32687pt>
 File: imagenes/post ST-sismos.png Graphic file (type png)
 <use imagenes/post ST-sismos.png>
 Package pdftex.def Info: imagenes/post ST-sismos.png  used on input line 23.
@@ -591,7 +591,7 @@ Overfull \hbox (41.34361pt too wide) in paragraph at lines 21--26
 
 
 ]
-<imagenes/GR-law.png, id=192, 496.85625pt x 309.40594pt>
+<imagenes/GR-law.png, id=197, 496.85625pt x 309.40594pt>
 File: imagenes/GR-law.png Graphic file (type png)
 <use imagenes/GR-law.png>
 Package pdftex.def Info: imagenes/GR-law.png  used on input line 37.
@@ -602,7 +602,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.1}) h
                                                   \__shipout_drop_firstpage_...
 l.41 
       <./imagenes/ST-sismos.png> <./imagenes/post ST-sismos.png>]
-<imagenes/K-R clust.png, id=200, 496.85625pt x 307.1475pt>
+<imagenes/K-R clust.png, id=205, 496.85625pt x 307.1475pt>
 File: imagenes/K-R clust.png Graphic file (type png)
 <use imagenes/K-R clust.png>
 Package pdftex.def Info: imagenes/K-R clust.png  used on input line 48.
@@ -623,22 +623,38 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2.1}) ha
                                                   \__shipout_drop_firstpage_...
 l.111 \begin{equation}
                       ] [13]
-<imagenes/log(eta).png, id=225, 499.11469pt x 307.1475pt>
+<imagenes/log(eta).png, id=230, 499.11469pt x 310.15875pt>
 File: imagenes/log(eta).png Graphic file (type png)
 <use imagenes/log(eta).png>
 Package pdftex.def Info: imagenes/log(eta).png  used on input line 143.
-(pdftex.def)             Requested size: 320.09349pt x 196.98615pt.
-) [14
+(pdftex.def)             Requested size: 320.09349pt x 198.91739pt.
+ [14
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.46      \include{Capitulos-Anexos/cap-02}
-                                            <./imagenes/log(eta).png>] [15]
+l.148 
+       <./imagenes/log(eta).png>]
+<imagenes/log(eta)1.png, id=237, 497.60907pt x 308.65312pt>
+File: imagenes/log(eta)1.png Graphic file (type png)
+<use imagenes/log(eta)1.png>
+Package pdftex.def Info: imagenes/log(eta)1.png  used on input line 154.
+(pdftex.def)             Requested size: 234.73653pt x 145.60388pt.
+
+Underfull \hbox (badness 10000) in paragraph at lines 149--157
+
+ []
+
+[15
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2.5}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.159 \begin{equation}
+                       <./imagenes/log(eta)1.png>]) [16]
 \openout2 = `Capitulos-Anexos/cap-03.aux'.
 
  (Capitulos-Anexos/cap-03.tex
 Cap\'{\i }tulo 3.
-) [16
+) [17
 
 
 
@@ -648,7 +664,7 @@ Cap\'{\i }tulo 3.
 
  (Capitulos-Anexos/anexo-01.tex
 Ap\'{e}ndice A.
-) [17
+) [18
 
 
 
@@ -658,7 +674,7 @@ Underfull \hbox (badness 1708) in paragraph at lines 4--11
 \T1/pbk/l/n/12 lue Theory?  [][]$\T1/pcr/m/n/12 https : / / www . cqf . com / blog / quant-[]finance-[]101 /
  []
 
-) [18
+) [19
 
 
 
@@ -674,17 +690,17 @@ Package rerunfilecheck Info: File `formato-tic.out' has not changed.
 (rerunfilecheck)             Checksum: E2835A35DDFB103576DE5F552F369B82;1670.
  ) 
 Here is how much of TeX's memory you used:
- 13415 strings out of 467867
- 210544 string characters out of 5418819
- 644783 words of memory out of 5000000
- 41980 multiletter control sequences out of 15000+600000
+ 13427 strings out of 467867
+ 210818 string characters out of 5418819
+ 645025 words of memory out of 5000000
+ 41989 multiletter control sequences out of 15000+600000
  655444 words of font info for 99 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 90i,15n,93p,650b,774s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,15n,93p,696b,774s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkdi8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkl8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkli8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb>
-Output written on formato-tic.pdf (25 pages, 552988 bytes).
+Output written on formato-tic.pdf (26 pages, 584713 bytes).
 PDF statistics:
- 344 PDF objects out of 1000 (max. 8388607)
- 65 named destinations out of 1000 (max. 500000)
- 124 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 357 PDF objects out of 1000 (max. 8388607)
+ 68 named destinations out of 1000 (max. 500000)
+ 129 words of extra memory for PDF output out of 10000 (max. 10000000)
 

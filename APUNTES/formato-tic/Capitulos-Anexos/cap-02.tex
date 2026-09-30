@@ -144,7 +144,24 @@ evento principal, clasificándolos como dependientes.
     \caption{Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log_{10}(\eta)$) obtenida mediante el algoritmo de Zaliapin.}
     \label{fig:Zaliapin_hist}
 \end{figure}
-Como se mencionó
+Como se mencionó y se observa en el gráfico anterior, el histograma de los valores $\log_{10}(\eta)$ presenta dos comportamientos con modas diferentes. La rama izquierda, con valores mucho más negativos, concentra los eventos dependientes; en ella, la proximidad espacial y temporal respecto a un evento principal es alta ($\eta_j = T_j \cdot R_j \approx 0$). Por otro lado, la rama derecha, con una concentración alrededor de $-2$, agrupa los eventos independientes, ya que los valores de $\eta_j$ se alejan de 0 al no mostrar cercanía espacial ni temporal respecto al evento principal.
+
+Para separar ambas ramas, existen varios criterios: (i) tomar el mínimo local de la densidad empírica en la zona de transición entre ambas modas como umbral; o (ii) ajustar una mezcla de dos distribuciones normales a los valores de $\log_{10}(\eta)$ y tomar como umbral el punto de intersección entre ambas densidades ajustadas.
+En este trabajo se optó por el criterio analítico de estimar una mixtura de distribuciones normales. Para lograrlo se empleó el algoritmo Expectación–Maximización (EM) para mixtura de normales (Benaglia, T., Chauveau, D., Hunter, D. R., $\&$ Young, D. S. (2009)) implementado en el paquete \textbf{mixtools} de R. Una vez aplicado y obtenidos
+los parámetros necesarios: vector de pesos $\lambda$ vector de medias $\mu$, vector de desviaciones estándar $\sigma$. El umbral $\eta_0$ se define como el valor de $log_{10}(\eta_j)$ donde las dos densidades ajustadas se intersecan, lo que corresponde al punto de separación entre los eventos dependientes e independientes. \newline
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/log(eta)1.png} % Cambia por la ruta exacta de tu imagen
+    \caption{Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) y independientes (cola derecha) y el umbral de separación entre las poblaciones.}
+    \label{fig:Zaliapin_hist_mixed}
+\end{figure}
+El umbral se obtuvo de resolver $f(x)=0$ con $f$ una función auxiliar, definida como:
+\begin{equation}
+    f(x) = \lambda_1\, f_{\mu_1,\sigma_1}(x) - \lambda_2\, f_{\mu_2,\sigma_2}(x),
+    \qquad x \in [\min(\mu_1,\mu_2),\ \max(\mu_1,\mu_2)].
+\end{equation}
+Donde, $f_{\mu_i, \sigma_i}$ es la densidad normal de cada población $i$. Con el resultado de que nuestro umbral $\eta_0\eqsim-3.239$.
+
 
 
 

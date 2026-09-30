@@ -332,6 +332,14 @@ resultado_zal_1980 <- decluster_zaliapin(datos, Mc = 5.4, df = 1.2, b = 1.0)
 eje x: qué tan "cerca" (en espacio, tiempo y energía) está un sismo de otro anterio
 
 ```{r}
+generar_catalogo_aleatorizado <- function(datos) {
+  datos_rand <- datos
+  datos_rand$time <- sample(datos$time)  # Intercambia tiempos
+  return(datos_rand)
+}
+```
+
+```{r}
 # --- 6. Calcular eta y su logaritmo ---
 resultado_zal_1980$eta <- resultado_zal_1980$T_j * resultado_zal_1980$R_j
 resultado_zal_1980$log_eta <- log10(resultado_zal_1980$eta)
@@ -342,13 +350,43 @@ umbral_zaliapin <- -4  # Puedes ajustar este valor según el valle observado
 hist(resultado_zal_1980$log_eta, breaks = 50, col = "lightblue",
      main = "Distribución de log10(eta) - Método Zaliapin",
      xlab = "log10(eta)", ylab = "Frecuencia")
+```
 
-# Añadir la línea vertical roja que representa el umbral del valle
-abline(v = umbral_zaliapin, col = "red", lwd = 2, lty = 2)
+```{r}
+library(mixtools)
+log_eta <- resultado_zal_1980$log_eta
+log_eta_clean <- log_eta[is.finite(log_eta)]
+set.seed(123) # Semilla para asegurar la reproducibilidad en tu tesis
+gmm_modelo <- normalmixEM(log_eta_clean, k = 2, maxit = 1000, epsilon = 1e-8)
+```
 
-# Opcional: Agregar una leyenda para mayor formalidad
-legend("topright", legend = paste("Umbral =", umbral_zaliapin), 
-       col = "red", lwd = 2, lty = 2, bty = "n")
+```{r}
+mu1 <- gmm_modelo$mu[1]
+mu2 <- gmm_modelo$mu[2]
+sig1 <- gmm_modelo$sigma[1]
+sig2 <- gmm_modelo$sigma[2]
+lam1 <- gmm_modelo$lambda[1]
+lam2 <- gmm_modelo$lambda[2]
+interseccion <- function(x) {
+  (lam1 * dnorm(x, mean = mu1, sd = sig1)) - (lam2 * dnorm(x, mean = mu2, sd = sig2))
+}
+lim_inf <- min(mu1, mu2)
+lim_sup <- max(mu1, mu2)
+umbral_gmm <- uniroot(interseccion, lower = lim_inf, upper = lim_sup)$root
+hist(log_eta_clean, breaks = 50, freq = FALSE, col = "lightblue", border = "gray",
+     main = "GMM: Densidad de log10(eta) y Umbral Analítico",
+     xlab = "log10(eta)", ylab = "Densidad")
+
+curve(lam1 * dnorm(x, mean = mu1, sd = sig1), add = TRUE, col = "blue", lwd = 2)
+curve(lam2 * dnorm(x, mean = mu2, sd = sig2), add = TRUE, col = "darkgreen", lwd = 2)
+lines(density(log_eta_clean), col = "black", lwd = 1, lty = 3) # Densidad empírica
+
+# Trazar el umbral analítico calculado
+abline(v = umbral_gmm, col = "red", lwd = 2, lty = 2)
+legend("topleft", 
+       legend = c("Moda 1", "Moda 2", paste("Umbral GMM =", round(umbral_gmm, 3))),
+       col = c("blue", "darkgreen", "red"), 
+       lwd = c(2, 2, 2), lty = c(1, 1, 2), bty = "n")
 ```
 
 ```{r}
