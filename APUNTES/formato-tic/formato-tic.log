@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  29 SEP 2026 20:57
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  30 SEP 2026 22:23
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -442,7 +442,7 @@ Package hyperref Info: Link coloring ON on input line 4.
 \@outlinefile=\write3
 \openout3 = `formato-tic.out'.
 
-<Imagenes/logoEPNnuevo.png, id=46, 611.76555pt x 697.04414pt>
+<Imagenes/logoEPNnuevo.png, id=114, 611.76555pt x 697.04414pt>
 File: Imagenes/logoEPNnuevo.png Graphic file (type png)
 <use Imagenes/logoEPNnuevo.png>
 Package pdftex.def Info: Imagenes/logoEPNnuevo.png  used on input line 19.
@@ -459,7 +459,7 @@ LaTeX Font Info:    Trying to load font information for U+rsfs on input line 19.
  (C:\Users\USER\AppData\Local\Programs\MiKTeX\tex/latex/jknappen\ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
-<Imagenes/logoCiencias.png, id=48, 781.92125pt x 790.955pt>
+<Imagenes/logoCiencias.png, id=116, 781.92125pt x 790.955pt>
 File: Imagenes/logoCiencias.png Graphic file (type png)
 <use Imagenes/logoCiencias.png>
 Package pdftex.def Info: Imagenes/logoCiencias.png  used on input line 19.
@@ -489,22 +489,22 @@ LaTeX Font Info:    Font shape `T1/pbk/b/it' in size <12> not available
  [4] [5] (formato-tic.toc
 LaTeX Info: Redefining \. on input line 1.
 LaTeX Info: Redefining \% on input line 1.
-)
+ [6
+
+])
 \tf@toc=\write4
 \openout4 = `formato-tic.toc'.
 
- [6
-
-] (formato-tic.lof
+ [7] (formato-tic.lof
 LaTeX Info: Redefining \. on input line 1.
 LaTeX Info: Redefining \% on input line 1.
-)
+ [8
+
+])
 \tf@lof=\write5
 \openout5 = `formato-tic.lof'.
 
- [7
-
-]
+ [9]
 \openout2 = `Capitulos-Anexos/cap-01.aux'.
 
  (Capitulos-Anexos/cap-01.tex
@@ -568,93 +568,185 @@ l.45      \include{Capitulos-Anexos/cap-01}
 
  (Capitulos-Anexos/cap-02.tex
 Cap\'{\i }tulo 2.
-<imagenes/ST-sismos.png, id=191, 648.92438pt x 221.32687pt>
-File: imagenes/ST-sismos.png Graphic file (type png)
-<use imagenes/ST-sismos.png>
-Package pdftex.def Info: imagenes/ST-sismos.png  used on input line 22.
-(pdftex.def)             Requested size: 204.85802pt x 69.8703pt.
-<imagenes/post ST-sismos.png, id=192, 648.92438pt x 221.32687pt>
-File: imagenes/post ST-sismos.png Graphic file (type png)
-<use imagenes/post ST-sismos.png>
-Package pdftex.def Info: imagenes/post ST-sismos.png  used on input line 23.
-(pdftex.def)             Requested size: 204.85802pt x 69.8703pt.
-LaTeX Font Info:    Font shape `T1/pbk/m/n' in size <10.95> not available
-(Font)              Font shape `T1/pbk/l/n' tried instead on input line 24.
 
-Overfull \hbox (41.34361pt too wide) in paragraph at lines 21--26
- [][] 
- []
-
-[8
+pdfTeX warning (ext4): destination with the same identifier (name{page.8}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.14 ...i√≥n y completitud del cat√°logo s√≠smico}
+                                                   [8
 
 
 
 
 ]
-<imagenes/GR-law.png, id=197, 496.85625pt x 309.40594pt>
-File: imagenes/GR-law.png Graphic file (type png)
-<use imagenes/GR-law.png>
-Package pdftex.def Info: imagenes/GR-law.png  used on input line 37.
-(pdftex.def)             Requested size: 320.09349pt x 199.3316pt.
- [9
+Overfull \hbox (3.04395pt too wide) in paragraph at lines 14--14
+|[]\T1/pbk/db/n/17.28 DepuraciÛn y com-ple-ti-tud del ca-t·-lo-go sÌs-
+ []
+
+<imagenes/ST-sismos.png, id=302, 648.92438pt x 221.32687pt>
+File: imagenes/ST-sismos.png Graphic file (type png)
+<use imagenes/ST-sismos.png>
+Package pdftex.def Info: imagenes/ST-sismos.png  used on input line 27.
+(pdftex.def)             Requested size: 204.85802pt x 69.8703pt.
+<imagenes/post ST-sismos.png, id=303, 648.92438pt x 221.32687pt>
+File: imagenes/post ST-sismos.png Graphic file (type png)
+<use imagenes/post ST-sismos.png>
+Package pdftex.def Info: imagenes/post ST-sismos.png  used on input line 28.
+(pdftex.def)             Requested size: 204.85802pt x 69.8703pt.
+LaTeX Font Info:    Font shape `T1/pbk/m/n' in size <10.95> not available
+(Font)              Font shape `T1/pbk/l/n' tried instead on input line 29.
+
+Overfull \hbox (41.34361pt too wide) in paragraph at lines 26--31
+ [][] 
+ []
+
+
+Overfull \hbox (24.2838pt too wide) in paragraph at lines 35--35
+|[]\T1/pbk/db/n/14.4 Magnitud de com-ple-ti-tud y Ley de Gutenberg-Richter| 
+ []
+
+
+pdfTeX warning (ext4): destination with the same identifier (name{page.9}) has been already used, duplicate ignored
+<to be read again> 
+                   \relax 
+l.39 
+      [9
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.41 
+l.39 
       <./imagenes/ST-sismos.png> <./imagenes/post ST-sismos.png>]
-<imagenes/K-R clust.png, id=205, 496.85625pt x 307.1475pt>
+<imagenes/GR-law.png, id=310, 496.85625pt x 309.40594pt>
+File: imagenes/GR-law.png Graphic file (type png)
+<use imagenes/GR-law.png>
+Package pdftex.def Info: imagenes/GR-law.png  used on input line 42.
+(pdftex.def)             Requested size: 320.09349pt x 199.3316pt.
+
+Overfull \hbox (32.79967pt too wide) in paragraph at lines 47--47
+|[]\T1/pbk/db/n/17.28 DiagnÛstico de de-pen-den-cia espacio-temporal| 
+ []
+
+<imagenes/K-R clust.png, id=311, 496.85625pt x 307.1475pt>
 File: imagenes/K-R clust.png Graphic file (type png)
 <use imagenes/K-R clust.png>
-Package pdftex.def Info: imagenes/K-R clust.png  used on input line 48.
+Package pdftex.def Info: imagenes/K-R clust.png  used on input line 56.
 (pdftex.def)             Requested size: 320.09349pt x 197.87662pt.
- [10
+[10
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.2}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.52 
+l.60 
       <./imagenes/GR-law.png>] [11
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.59 
+l.69 
       <./imagenes/K-R clust.png>] [12
 pdfTeX warning (ext4): destination with the same identifier (name{table.2.1}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.111 \begin{equation}
-                      ] [13]
-<imagenes/log(eta).png, id=230, 499.11469pt x 310.15875pt>
+l.122 
+      ] [13]
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 155.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\log' on input line 155.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `subscript' on input line 155.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\eta' on input line 155.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `math shift' on input line 155.
+
+<imagenes/log(eta).png, id=334, 499.11469pt x 310.15875pt>
 File: imagenes/log(eta).png Graphic file (type png)
 <use imagenes/log(eta).png>
-Package pdftex.def Info: imagenes/log(eta).png  used on input line 143.
+Package pdftex.def Info: imagenes/log(eta).png  used on input line 161.
 (pdftex.def)             Requested size: 320.09349pt x 198.91739pt.
- [14
+[14] [15
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.148 
+l.173 
        <./imagenes/log(eta).png>]
-<imagenes/log(eta)1.png, id=237, 497.60907pt x 308.65312pt>
+<imagenes/log(eta)1.png, id=347, 497.60907pt x 308.65312pt>
 File: imagenes/log(eta)1.png Graphic file (type png)
 <use imagenes/log(eta)1.png>
-Package pdftex.def Info: imagenes/log(eta)1.png  used on input line 154.
+Package pdftex.def Info: imagenes/log(eta)1.png  used on input line 176.
 (pdftex.def)             Requested size: 234.73653pt x 145.60388pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 149--157
-
- []
-
-[15
+ [16
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.5}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.159 \begin{equation}
-                       <./imagenes/log(eta)1.png>]) [16]
+l.192 
+       <./imagenes/log(eta)1.png>]
+<imagenes/mix-norm.jpeg, id=355, 1348.03625pt x 947.54pt>
+File: imagenes/mix-norm.jpeg Graphic file (type jpg)
+<use imagenes/mix-norm.jpeg>
+Package pdftex.def Info: imagenes/mix-norm.jpeg  used on input line 195.
+(pdftex.def)             Requested size: 234.73653pt x 164.9834pt.
+<imagenes/f1-f2.png, id=356, 659.46375pt x 328.22626pt>
+File: imagenes/f1-f2.png Graphic file (type png)
+<use imagenes/f1-f2.png>
+Package pdftex.def Info: imagenes/f1-f2.png  used on input line 204.
+(pdftex.def)             Requested size: 234.73653pt x 116.82915pt.
+
+Overfull \hbox (18.94437pt too wide) in paragraph at lines 209--209
+|[]\T1/pbk/db/n/14.4 An·lisis de de-pen-den-cia tem-po-ral: Prue-bas de Ljung-
+ []
+
+[17
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2.6}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.244 \end{table}
+                 
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2.7}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.244 \end{table}
+                  <./imagenes/mix-norm.jpeg> <./imagenes/f1-f2.png>]
+<imagenes/densidad.png, id=362, 997.47656pt x 581.17125pt>
+File: imagenes/densidad.png Graphic file (type png)
+<use imagenes/densidad.png>
+Package pdftex.def Info: imagenes/densidad.png  used on input line 253.
+(pdftex.def)             Requested size: 324.35907pt x 188.98483pt.
+ [18
+pdfTeX warning (ext4): destination with the same identifier (name{table.2.2}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.257 L
+       a distribuci√≥n espacial de los epicentros evidencia un patr√≥n heter...]
+<imagenes/st eventos.png, id=368, 496.85625pt x 306.39468pt>
+File: imagenes/st eventos.png Graphic file (type png)
+<use imagenes/st eventos.png>
+Package pdftex.def Info: imagenes/st eventos.png  used on input line 267.
+(pdftex.def)             Requested size: 324.35907pt x 200.02377pt.
+ [19
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2.8}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.271  \subsection{Distribuci√≥n de magnitudes}
+                                                <./imagenes/densidad.png>]) [20
+pdfTeX warning (ext4): destination with the same identifier (name{figure.2.9}) has been already used, duplicate ignored
+<argument> ...shipout:D \box_use:N \l_shipout_box 
+                                                  \__shipout_drop_firstpage_...
+l.46      \include{Capitulos-Anexos/cap-02}
+                                            <./imagenes/st eventos.png>]
 \openout2 = `Capitulos-Anexos/cap-03.aux'.
 
  (Capitulos-Anexos/cap-03.tex
 Cap\'{\i }tulo 3.
-) [17
+) [21
 
 
 
@@ -664,7 +756,7 @@ Cap\'{\i }tulo 3.
 
  (Capitulos-Anexos/anexo-01.tex
 Ap\'{e}ndice A.
-) [18
+) [22
 
 
 
@@ -674,7 +766,7 @@ Underfull \hbox (badness 1708) in paragraph at lines 4--11
 \T1/pbk/l/n/12 lue Theory?  [][]$\T1/pcr/m/n/12 https : / / www . cqf . com / blog / quant-[]finance-[]101 /
  []
 
-) [19
+) [23
 
 
 
@@ -687,20 +779,20 @@ LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
 Package rerunfilecheck Info: File `formato-tic.out' has not changed.
-(rerunfilecheck)             Checksum: E2835A35DDFB103576DE5F552F369B82;1670.
+(rerunfilecheck)             Checksum: 9D81AE9E5C2FB858735F3766BAA00B56;6527.
  ) 
 Here is how much of TeX's memory you used:
- 13427 strings out of 467867
- 210818 string characters out of 5418819
- 645025 words of memory out of 5000000
- 41989 multiletter control sequences out of 15000+600000
- 655444 words of font info for 99 fonts, out of 8000000 for 9000
+ 13529 strings out of 467867
+ 212681 string characters out of 5418819
+ 646814 words of memory out of 5000000
+ 42063 multiletter control sequences out of 15000+600000
+ 659464 words of font info for 116 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 90i,15n,93p,696b,774s stack positions out of 10000i,1000n,20000p,200000b,200000s
-<C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkdi8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkl8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkli8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb>
-Output written on formato-tic.pdf (26 pages, 584713 bytes).
+ 90i,15n,93p,696b,800s stack positions out of 10000i,1000n,20000p,200000b,200000s
+<C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkdi8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkl8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkli8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb>
+Output written on formato-tic.pdf (32 pages, 789353 bytes).
 PDF statistics:
- 357 PDF objects out of 1000 (max. 8388607)
- 68 named destinations out of 1000 (max. 500000)
- 129 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 497 PDF objects out of 1000 (max. 8388607)
+ 94 named destinations out of 1000 (max. 500000)
+ 285 words of extra memory for PDF output out of 10000 (max. 10000000)
 

@@ -390,7 +390,7 @@ legend("topleft",
 ```
 
 ```{r}
-umbral_zaliapin <- -4 
+umbral_zaliapin <- -3.239 
 
 catalogo_independiente <- subset(resultado_zal_1980, is.na(log_eta) | log_eta > umbral_zaliapin) #agarramos todos los valores que nos generen la muestra independiente en el tiempo
 catalogo_independiente <- catalogo_independiente[order(catalogo_independiente$time), ]
@@ -401,8 +401,8 @@ cat("Sismos principales independientes:", nrow(catalogo_independiente), "\n\n")
 
 # 4. Verificación matemática de la Independencia Temporal
 # Calcular tiempos entre eventos (en días numéricos puros)
-tiempos_inter <- as.numeric(difftime(datos$time[-1], 
-                                     datos$time[-nrow(datos)], 
+tiempos_inter <- as.numeric(difftime(catalogo_independiente$time[-1], 
+                                     catalogo_independiente$time[-nrow(datos)], 
                                      units = "days"))
 tiempos_inter <- tiempos_inter[!is.na(tiempos_inter) & tiempos_inter > 0]
 
@@ -416,6 +416,7 @@ cat("->", ifelse(test_lb$p.value > 0.05, "ÉXITO: Independencia temporal confirm
 ```{r}
 mediana_t <- as.numeric(median(tiempos_inter, na.rm = TRUE))
 factor_rachas <- factor(tiempos_inter > mediana_t, levels = c(FALSE, TRUE)) #examinamos los eventos por encima de la mediana como nuestro tipo de racha
+library(tseries)
 test_rachas <- runs.test(factor_rachas)
 
 cat("--- PRUEBA DE RACHAS ---\n")
@@ -429,6 +430,48 @@ datos_ind<-catalogo_independiente
 ```
 
 **Independencia temporal estricta:** La ocurrencia de un evento no debe condicionar la probabilidad de que ocurra el siguiente en el tiempo. Esto valida el supuesto matemático del Proceso de Poisson unidimensional. Ya cubriste este requisito al eliminar las réplicas con el algoritmo de Zaliapin y verificar los tiempos de inter-llegada con las pruebas estadísticas. (LISTO)
+
+### Análisis exploratorio 
+
+```{r, warning=FALSE}
+library(spatstat)
+X <- ppp(
+  x = datos_ind$longitude,
+  y = datos_ind$latitude,
+  window = owin(
+    xrange = range(datos_ind$longitude),
+    yrange = range(datos_ind$latitude)
+  )
+)
+
+```
+
+```{r}
+dens <- density.ppp(X, sigma = 2, dimyx = 512)
+plot(dens, main = "Mapa de calor de la intensidad estimada",
+     col = viridis(100),
+     zlim = c(0, quantile(dens, 0.99)))
+```
+
+Serie temporal acumulada de eventos principales
+
+```{r}
+# --- Serie temporal acumulada ---
+plot(datos$time, 1:nrow(datos),
+     type = "s", col = "steelblue", lwd = 2,
+     xlab = "Tiempo", ylab = expression(N(t)),
+     main = "Serie temporal acumulada de eventos principales",
+     cex.main = 1.4, cex.lab = 1.2)
+
+# Línea de referencia: recta entre (t_min, 0) y (t_max, N)
+lines(c(min(datos$time), max(datos$time)),
+      c(0, nrow(datos)),
+      col = "red", lty = 2, lwd = 2)
+
+legend("topleft",
+       legend = c("N(t) observado", "Tasa constante esperada (HPP)"),
+       col = c("steelblue", "red"), lty = c(1, 2), lwd = 2, bty = "n")
+```
 
 Análisis de Picos sobre el Umbral (POT)
 

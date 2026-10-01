@@ -3,20 +3,47 @@
 \@writefile{toc}{\contentsline {chapter}{\numberline {2}Metodología}{8}{chapter.2}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\p@ }}
 \@writefile{lot}{\addvspace {10\p@ }}
+\@writefile{toc}{\contentsline {section}{\numberline {2.1}Depuración y completitud del catálogo sísmico}{9}{section.2.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1.1}Limpieza inicial y selección del tipo de magnitud}{9}{subsection.2.1.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2.1}{\ignorespaces Comparación del conteo de eventos sísmicos antes y después del filtrado por magnitud de completitud. No es que hubiera menos sismos, sino que actualmente se registran con mayor precisión instrumental.}}{9}{figure.2.1}\protected@file@percent }
 \newlabel{fig:sismos_comparacion}{{2.1}{9}{Comparación del conteo de eventos sísmicos antes y después del filtrado por magnitud de completitud. No es que hubiera menos sismos, sino que actualmente se registran con mayor precisión instrumental}{figure.2.1}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1.2}Magnitud de completitud y Ley de Gutenberg-Richter}{9}{subsection.2.1.2}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2.2}{\ignorespaces Relación de Gutenberg-Richter: $\log _{10}(N) = a - bM$ para el catálogo de eventos sísmicos filtrado por magnitud de completitud.}}{10}{figure.2.2}\protected@file@percent }
 \newlabel{fig:gutenberg_richter}{{2.2}{10}{Relación de Gutenberg-Richter: $\log _{10}(N) = a - bM$ para el catálogo de eventos sísmicos filtrado por magnitud de completitud}{figure.2.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.2}Diagnóstico de dependencia espacio-temporal}{10}{section.2.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2.1}Dependencia espacial: función K de Ripley}{10}{subsection.2.2.1}\protected@file@percent }
 \@writefile{lof}{\contentsline {figure}{\numberline {2.3}{\ignorespaces Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se debe cumplir que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$).}}{11}{figure.2.3}\protected@file@percent }
 \newlabel{fig:k_ripley}{{2.3}{11}{Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se debe cumplir que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$)}{figure.2.3}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces Diágnostico de dependencia temporal antes de la desclusterización entre eventos sísmicos.}}{12}{table.2.1}\protected@file@percent }
-\newlabel{tab:pruebas-temporales}{{2.1}{12}{Diágnostico de dependencia temporal antes de la desclusterización entre eventos sísmicos}{table.2.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2.4}{\ignorespaces Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log _{10}(\eta )$) obtenida mediante el algoritmo de Zaliapin.}}{14}{figure.2.4}\protected@file@percent }
-\newlabel{fig:Zaliapin_hist}{{2.4}{14}{Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log _{10}(\eta )$) obtenida mediante el algoritmo de Zaliapin}{figure.2.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {2.5}{\ignorespaces Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) y independientes (cola derecha) y el umbral de separación entre las poblaciones.}}{15}{figure.2.5}\protected@file@percent }
-\newlabel{fig:Zaliapin_hist_mixed}{{2.5}{15}{Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) y independientes (cola derecha) y el umbral de separación entre las poblaciones}{figure.2.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2.2}Dependencia temporal: pruebas de Ljung-Box y Rachas}{11}{subsection.2.2.2}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.1}{\ignorespaces Diagnóstico de dependencia temporal antes de la desclusterización entre eventos sísmicos.}}{12}{table.2.1}\protected@file@percent }
+\newlabel{tab:pruebas-temporales}{{2.1}{12}{Diagnóstico de dependencia temporal antes de la desclusterización entre eventos sísmicos}{table.2.1}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.3}Desclusterización de eventos sísmicos}{12}{section.2.3}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.1}Propiedades buscadas tras la desclusterización}{12}{subsection.2.3.1}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.2}Algoritmo de Baiesi y Paczuski (2004)}{13}{subsection.2.3.2}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.3}Distribución bimodal de $\log _{10}(\eta )$}{14}{subsection.2.3.3}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.4}{\ignorespaces Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log _{10}(\eta )$) obtenida mediante el algoritmo de Zaliapin.}}{15}{figure.2.4}\protected@file@percent }
+\newlabel{fig:Zaliapin_hist}{{2.4}{15}{Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log _{10}(\eta )$) obtenida mediante el algoritmo de Zaliapin}{figure.2.4}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.4}Estimación del umbral mediante mixtura de normales}{15}{subsection.2.3.4}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.5}{\ignorespaces Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) e independientes (cola derecha) y el umbral de separación entre las poblaciones.}}{16}{figure.2.5}\protected@file@percent }
+\newlabel{fig:Zaliapin_hist_mixed}{{2.5}{16}{Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) e independientes (cola derecha) y el umbral de separación entre las poblaciones}{figure.2.5}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.5}Función auxiliar de diferencia}{16}{subsection.2.3.5}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.6}{\ignorespaces Comportamiento de las densidades en las proximidades de sus medias. Dado que cada componente alcanza su máximo en $\mu _i$.}}{17}{figure.2.6}\protected@file@percent }
+\newlabel{fig:mix-norm}{{2.6}{17}{Comportamiento de las densidades en las proximidades de sus medias. Dado que cada componente alcanza su máximo en $\mu _i$}{figure.2.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {2.7}{\ignorespaces Función diferencia $f(x) = \lambda _1\, f_{\mu _1,\sigma _1}(x) - \lambda _2\, f_{\mu _2,\sigma _2}(x)$. Se evidencia el umbral como la raíz de la función $f$ (2.4).}}{17}{figure.2.7}\protected@file@percent }
+\newlabel{fig:diff_f1,f2}{{2.7}{17}{Función diferencia $f(x) = \lambda _1\, f_{\mu _1,\sigma _1}(x) - \lambda _2\, f_{\mu _2,\sigma _2}(x)$. Se evidencia el umbral como la raíz de la función $f$ (2.4)}{figure.2.7}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3.6}Análisis de dependencia temporal: Pruebas de Ljung-box y Rachas}{18}{subsection.2.3.6}\protected@file@percent }
+\@writefile{lot}{\contentsline {table}{\numberline {2.2}{\ignorespaces Diagnóstico de dependencia temporal \textbf  {después} de la desclusterización. Ambas pruebas confirman la independencia temporal de los eventos sísmicos principales.}}{18}{table.2.2}\protected@file@percent }
+\newlabel{tab:pruebas-temporales-post}{{2.2}{18}{Diagnóstico de dependencia temporal \textbf {después} de la desclusterización. Ambas pruebas confirman la independencia temporal de los eventos sísmicos principales}{table.2.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {2.4}Análisis exploratorio del catálogo desclusterizado}{18}{section.2.4}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4.1}Densidad espacial}{19}{subsection.2.4.1}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.8}{\ignorespaces Intensidad de eventos sísmicos principales en la región de estudio. Se observa una mayor concentración de eventos en las zonas cercanas a fallas geológicas activas.}}{19}{figure.2.8}\protected@file@percent }
+\newlabel{fig:densidad_espacial}{{2.8}{19}{Intensidad de eventos sísmicos principales en la región de estudio. Se observa una mayor concentración de eventos en las zonas cercanas a fallas geológicas activas}{figure.2.8}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4.2}Serie temporal Acumulada y tasa de ocurrencia}{20}{subsection.2.4.2}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {2.9}{\ignorespaces Serie temporal acumulada de eventos sísmicos principales.}}{20}{figure.2.9}\protected@file@percent }
+\newlabel{fig:serie_temporal}{{2.9}{20}{Serie temporal acumulada de eventos sísmicos principales}{figure.2.9}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4.3}Distribución de magnitudes}{20}{subsection.2.4.3}\protected@file@percent }
 \@setckpt{Capitulos-Anexos/cap-02}{
-\setcounter{page}{17}
+\setcounter{page}{21}
 \setcounter{equation}{4}
 \setcounter{enumi}{3}
 \setcounter{enumii}{4}
@@ -26,17 +53,17 @@
 \setcounter{mpfootnote}{0}
 \setcounter{part}{0}
 \setcounter{chapter}{2}
-\setcounter{section}{0}
-\setcounter{subsection}{0}
+\setcounter{section}{4}
+\setcounter{subsection}{3}
 \setcounter{subsubsection}{0}
 \setcounter{paragraph}{0}
 \setcounter{subparagraph}{0}
-\setcounter{figure}{5}
-\setcounter{table}{1}
+\setcounter{figure}{9}
+\setcounter{table}{2}
 \setcounter{parentequation}{0}
 \setcounter{section@level}{0}
 \setcounter{Item}{16}
 \setcounter{Hfootnote}{0}
-\setcounter{bookmark@seq@number}{6}
+\setcounter{bookmark@seq@number}{23}
 \setcounter{float@type}{4}
 }

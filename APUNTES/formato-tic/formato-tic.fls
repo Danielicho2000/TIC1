@@ -312,15 +312,15 @@ INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx10.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
 INPUT C:\Users\USER\AppData\Local\MiKTeX\fonts\tfm\public\rsfs\rsfs10.tfm
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
-INPUT .\imagenes\GR-law.png
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\bookman\pbkl8t.vf
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8r.tfm
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
+INPUT .\imagenes\GR-law.png
 INPUT .\imagenes\K-R clust.png
 INPUT .\imagenes\K-R clust.png
 INPUT .\imagenes\K-R clust.png
@@ -328,6 +328,23 @@ INPUT .\imagenes\K-R clust.png
 INPUT .\imagenes\K-R clust.png
 INPUT .\imagenes\K-R clust.png
 INPUT .\imagenes\K-R clust.png
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmr12.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmmi12.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmsy10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmex10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\cmextra\cmex7.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx12.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx7.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msam7.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm10.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\amsfonts\symbols\msbm7.tfm
+INPUT C:\Users\USER\AppData\Local\MiKTeX\fonts\tfm\public\rsfs\rsfs10.tfm
+INPUT C:\Users\USER\AppData\Local\MiKTeX\fonts\tfm\public\rsfs\rsfs10.tfm
+INPUT C:\Users\USER\AppData\Local\MiKTeX\fonts\tfm\public\rsfs\rsfs7.tfm
 INPUT .\imagenes\log(eta).png
 INPUT .\imagenes\log(eta).png
 INPUT .\imagenes\log(eta).png
@@ -342,6 +359,34 @@ INPUT .\imagenes\log(eta)1.png
 INPUT .\imagenes\log(eta)1.png
 INPUT .\imagenes\log(eta)1.png
 INPUT .\imagenes\log(eta)1.png
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\mix-norm.jpeg
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\f1-f2.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\densidad.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\st eventos.png
 INPUT .\Capitulos-Anexos\cap-03.tex
 INPUT .\Capitulos-Anexos\cap-03.tex
 OUTPUT Capitulos-Anexos\cap-03.aux
@@ -384,6 +429,8 @@ INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi6.pfb
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi8.pfb
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmmi8.pfb
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmr10.pfb
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmr10.pfb
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmr12.pfb
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmr12.pfb
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\type1\public\amsfonts\cm\cmr6.pfb

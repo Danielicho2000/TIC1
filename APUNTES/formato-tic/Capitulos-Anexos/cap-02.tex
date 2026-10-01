@@ -5,17 +5,22 @@ El desarrollo del componente se enmarca en un enfoque cuantitativo, basado en el
 probabilísticas que mejor representen los datos empíricos. Para ello, el estudio se fundamenta en la Distribución Generalizada de Pareto (GPD). La selección de este modelo 
 se sustenta en la literatura científica, la cual demuestra su eficacia para el análisis de valores extremos mediante el enfoque de Picos sobre el Umbral (POT), destacando 
 su eficiencia en el uso de datos y su capacidad para modelar directamente las excedencias sobre un umbral físico interpretable.
-\newline
-El método empleado es de tipo hipotético-deductivo.Se parte de la hipótesis central de que la energía sísmica superior a un umbral base puede ser modelada mediante la distribución GPD, 
+
+El método empleado es de tipo hipotético-deductivo. Se parte de la hipótesis central de que la energía sísmica superior a un umbral base puede ser modelada mediante la distribución GPD, 
 cuyos parámetros fluctúan dinámicamente en función de covariables físicas y espaciotemporales. A partir de esta premisa, se deducen implicaciones estadísticas y se ejecutan pruebas empíricas 
-para validar o refutar la hipótesis, evaluando el ajuste de la distribución al someterla a distintos escenarios.En consecuencia, la investigación presenta un diseño explicativo y correlacional, 
+para validar o refutar la hipótesis, evaluando el ajuste de la distribución al someterla a distintos escenarios. En consecuencia, la investigación presenta un diseño explicativo y correlacional, 
 ya que busca evaluar y cuantificar cómo la interacción de las variables físicas y espaciales determinan el comportamiento del parámetro de escala ($\sigma$) en el modelo de excedencias.
-\newline
-Un primer paso en el desarrollo del componente consistió en la mejora del catálogo de eventos sísmicos, fue necesario realizar una limpieza de datos en función al tipo de magnitud registrada y sus variantes
-; se tomó el tipo de magnitud Momento ($M_w$), pues, es el tipo de mangitud que nos permite medir el tamaño físico del sismo en función de la energía liberada. También datos se dividirán datos incompletos, 
+
+\section{Depuración y completitud del catálogo sísmico}
+
+\subsection{Limpieza inicial y selección del tipo de magnitud}
+Un primer paso en el desarrollo del componente consistió en la mejora del catálogo de eventos sísmicos; fue necesario realizar una limpieza de datos en función al tipo de magnitud registrada y sus variantes; 
+se tomó el tipo de magnitud Momento ($M_w$), pues es el tipo de magnitud que nos permite medir el tamaño físico del sismo en función de la energía liberada. También se dividirán datos incompletos, 
 y de ser el caso, determinar la muestra de eventos en función de la calidad de los datos registrados.
+
 Se nota que existe un aumento en el número de eventos sísmicos registrados a lo largo del tiempo, sin embargo existe un periodo de tiempo con datos faltantes, por ende se trabajará con los datos
 siguientes al año 1984, ya que a partir de este año se cuenta con un registro más confiable y consistente.
+
 \begin{figure}[H]
     \centering
     \begin{tabular}{cc}
@@ -27,46 +32,43 @@ siguientes al año 1984, ya que a partir de este año se cuenta con un registro 
     \label{fig:sismos_comparacion}
 \end{figure}
 
+\subsection{Magnitud de completitud y Ley de Gutenberg-Richter}
 El segundo paso consistió en tener un catálogo fiable y mayormente completo según la Ley de Gutenberg-Richter, la cual describe la relación entre la magnitud y la frecuencia de los sismos, otorgándonos la ventaja de
-encontrar una magnitud mínima de completitud a partir del cual se empieza a considerar una relación log-lineal entre la frecuencia y la magnitud. Como resultado de este análisis, se indentificó un umbral
-mínimo de mangitud de $M_c = 5.4$, el cual fue utilizado para filtrar los eventos sísmicos y sea consistente la Ley de Gutenberg-Richter.
+encontrar una magnitud mínima de completitud a partir del cual se empieza a considerar una relación log-lineal entre la frecuencia y la magnitud. Como resultado de este análisis, se identificó un umbral
+mínimo de magnitud de $M_c = 5.4$, el cual fue utilizado para filtrar los eventos sísmicos y sea consistente la Ley de Gutenberg-Richter.
 
 \begin{figure}[H]
-    
     \centering
-    \includegraphics[width=0.75\textwidth]{imagenes/GR-law.png} % Cambia por la ruta exacta de tu imagen
+    \includegraphics[width=0.75\textwidth]{imagenes/GR-law.png}
     \caption{Relación de Gutenberg-Richter: $\log_{10}(N) = a - bM$ para el catálogo de eventos sísmicos filtrado por magnitud de completitud.}
     \label{fig:gutenberg_richter}
 \end{figure}
 
+\section{Diagnóstico de dependencia espacio-temporal}
+
+\subsection{Dependencia espacial: función K de Ripley}
 Ahora, con un catálogo completo y ordenado, se debe hacer un diagnóstico acerca de sus dependencias espacio-temporales, se busca evaluar si dentro de la componente espacial existe la posibilidad de ver 
-CSR clustering e inhibición, se espera que se evidencie un patrón de clustering, pues al estar cerca de fallas geológicas los inicios del sismo se concentran en ciertas zonas geográficas, generando un agrupamiento de eventos.
-Una manera sencilla de evaluar esta depedencia espacial es mediante la función K de Ripley, la cual permitirá determinar si existe un patrón en específico.
+CSR, clustering e inhibición. Se espera que se evidencie un patrón de clustering, pues al estar cerca de fallas geológicas los inicios del sismo se concentran en ciertas zonas geográficas, generando un agrupamiento de eventos.
+Una manera sencilla de evaluar esta dependencia espacial es mediante la función K de Ripley, la cual permitirá determinar si existe un patrón en específico.
+
 \begin{figure}[H]
-    
     \centering
-    \includegraphics[width=0.75\textwidth]{imagenes/K-R clust.png} % Cambia por la ruta exacta de tu imagen
+    \includegraphics[width=0.75\textwidth]{imagenes/K-R clust.png}
     \caption{Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se debe cumplir que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$).}
     \label{fig:k_ripley}
 \end{figure}
 
-Por lo tanto, en la componente espacial hay certeza de una clusterización de eventos, era lo esperado. Ahora, en cuanto a la dependencia temporal, se busca evaluar si existe un patrón de CSR principalmente; o, secundariamente inhibición o clustering de eventos en el timepo. 
-Se espera en sismicidad natural, lo habitual. Antes de limpiar el catálogo de datos, es conocido que surge un agrupamiento de eventos sismicos provocados por las secuencias de réplicas y no por un patrón de CSR, en cuyo caso será necesario aplicar su desclusterización filtrando los eventos que provoquen réplicas en función del intervalo de tiempo entre estos.
-Previo a la desclusterización, el análisis de la dependencia temporal se consideró los valores "p" de las pruebas de Ljung-Box y de Rachas. La  primera analiza la autocorrelación en los retardos temporales;  mientras que la segunda (test de Rachas) 
-detecta desviaciones de la aleatoriedad de eventos sismicos en el tiempo mediante la binarización de los intervalos entre eventos, clasificándolos en función de, si superan o no la mediana muestral; y, la cantidad de rachas para comparar con lo esperado bajo aleatorieda. Entonces, si se encuentra pocas
-rachas que cumplan el factor, significa que hubo mayor cantidad de agrupamientos de eventos sismicos, es decir de replicas; en otras palabras, es evidente que la actvidad sismica está sujeta a una dependencia temporal. De existir una importante cantidad de rachas, es evidente que se estaría frente a un patrón con mayor alternancia de estados provocado posiblemente por inhibición o regularidad
-de eventos. 
+\subsection{Dependencia temporal: pruebas de Ljung-Box y Rachas}
+Por lo tanto, en la componente espacial hay certeza de una clusterización de eventos, era lo esperado. Ahora, en cuanto a la dependencia temporal, se busca evaluar si existe un patrón de CSR principalmente; o, secundariamente inhibición o clustering de eventos en el tiempo. 
+Se espera en sismicidad natural, lo habitual. Antes de limpiar el catálogo de datos, es conocido que surge un agrupamiento de eventos sísmicos provocados por las secuencias de réplicas y no por un patrón de CSR, en cuyo caso será necesario aplicar su desclusterización filtrando los eventos que provoquen réplicas en función del intervalo de tiempo entre estos.
 
-Una vez aplicado el algoritmo de desclusterización se garantiza que:
-\begin{itemize}
-    \item Si $s\leq t$ entoncces $N_s \leq N_t$
-    \item Para todo n>0 y la sucesión crecientede tiempos $\{t_i\}_{i=1}^n$ se cumple que $N_{t_1}, N_{t_2}-N_{t_1}, \dots, N_{t_n}-N_{t_{n-1}}$ son independientes.
-\end{itemize}
-En el primer punto, los sismos se cuentan de manera acumulativa en el tiempo, y para el segundo punto, la desclusterización elimina las replicas y secuencias dependientes asociadas a los eventos princiapes en un bloque de tiempo, la ocurrencia de sismos en el intervalo no condiciona ni aporta información sobre su conteo en el siguiente bloque disjunto, 
-garantizando que los incrementos estocásticos en intervalos de tiempo consecutivos sean independientes.
+Previo a la desclusterización, el análisis de la dependencia temporal consideró los valores "p" de las pruebas de Ljung-Box y de Rachas. La primera analiza la autocorrelación en los retardos temporales; mientras que la segunda (test de Rachas) 
+detecta desviaciones de la aleatoriedad de eventos sísmicos en el tiempo mediante la binarización de los intervalos entre eventos, clasificándolos en función de si superan o no la mediana muestral; y, la cantidad de rachas para comparar con lo esperado bajo aleatoriedad. Entonces, si se encuentran pocas
+rachas que cumplan el factor, significa que hubo mayor cantidad de agrupamientos de eventos sísmicos, es decir de réplicas; en otras palabras, es evidente que la actividad sísmica está sujeta a una dependencia temporal. De existir una importante cantidad de rachas, es evidente que se estaría frente a un patrón con mayor alternancia de estados provocado posiblemente por inhibición o regularidad
+de eventos.
+
 \begin{table}[H]
     \centering
-    % --- Tabla izquierda ---
     \begin{minipage}[t]{0.47\textwidth}
         \centering
         \begin{tabular}{lc}
@@ -81,7 +83,6 @@ garantizando que los incrementos estocásticos en intervalos de tiempo consecuti
         \end{tabular}
     \end{minipage}
     \hfill
-    % --- Tabla derecha ---
     \begin{minipage}[t]{0.47\textwidth}
         \centering
         \begin{tabular}{lc}
@@ -96,17 +97,29 @@ garantizando que los incrementos estocásticos en intervalos de tiempo consecuti
         \end{tabular}
     \end{minipage}
     
-    \caption{Diágnostico de dependencia temporal antes de la desclusterización
-             entre eventos sísmicos.}
+    \caption{Diagnóstico de dependencia temporal antes de la desclusterización entre eventos sísmicos.}
     \label{tab:pruebas-temporales}
 \end{table}
 
+\section{Desclusterización de eventos sísmicos}
+
+\subsection{Propiedades buscadas tras la desclusterización}
 A continuación se realizará la desclusterización de los eventos sísmicos como buena práctica para dar más seguridad al postulado de independencia de estos eventos: $N_{t_1}, N_{t_2} - N_{t_1}, \dots, N_{t_n} - N_{t_{n-1}}$.
 
+Una vez aplicado el algoritmo de desclusterización se garantiza que:
+\begin{itemize}
+    \item Si $s\leq t$ entonces $N_s \leq N_t$
+    \item Para todo $n>0$ y la sucesión creciente de tiempos $\{t_i\}_{i=1}^n$ se cumple que $N_{t_1}, N_{t_2}-N_{t_1}, \dots, N_{t_n}-N_{t_{n-1}}$ son independientes.
+\end{itemize}
 
-El algoritmo de desclusterización utilizado es el propuesto por Baiesi y Paczuki, 2004, el cual se basa es reconocer en una red de fallas geológicas, los sismos más cercanos a un evento principal, para seguidamente poder filtrarlos en función 
+En el primer punto, los sismos se cuentan de manera acumulativa en el tiempo, y para el segundo punto, la desclusterización elimina las réplicas y secuencias dependientes asociadas a los eventos principales en un bloque de tiempo; la ocurrencia de sismos en el intervalo no condiciona ni aporta información sobre su conteo en el siguiente bloque disjunto, 
+garantizando que los incrementos estocásticos en intervalos de tiempo consecutivos sean independientes.
+
+\subsection{Algoritmo de Baiesi y Paczuski (2004)}
+El algoritmo de desclusterización utilizado es el propuesto por Baiesi y Paczuski, 2004, el cual se basa en reconocer en una red de fallas geológicas los sismos más cercanos a un evento principal, para seguidamente poder filtrarlos en función 
 de la magnitud del evento principal y de la distancia espacial y temporal de los eventos asociados. La idea es que un evento principal pueda generar un conjunto de eventos dependientes en una ventana de tiempo y espacio, los cuales deberán ser
-eliminados del catálogo de eventos sísmicos para garantizar la independencia de los incrementos estocásticos. \newline
+eliminados del catálogo de eventos sísmicos para garantizar la independencia de los incrementos estocásticos.
+
 Entonces se deberá calcular los vecinos más cercanos en función de la magnitud de cada evento principal. Para ello la idea es calcular una distancia de interacción entre eventos sísmicos, definida por:
 \begin{equation}
     \eta_{ij} = \begin{cases}
@@ -114,68 +127,145 @@ Entonces se deberá calcular los vecinos más cercanos en función de la magnitu
         \infty, & \text{si } t_j \leq t_i,
     \end{cases}
 \end{equation}
+
 Notemos varios puntos de la ecuación anterior:
 \begin{itemize}
     \item $r_{ij}$ es la distancia espacial entre los epicentros de los eventos $i$ y $j$.
-    \item $d_f$ es la dimensión fractal del epicentro en la red de fallas geológicas, la cual se estima en $d_f = 1.6$ para la región de estudio. Mide en promedio que tanto decae la densidad de las replicas luego del evento
+    \item $d_f$ es la dimensión fractal del epicentro en la red de fallas geológicas, la cual se estima en $d_f = 1.6$ para la región de estudio. Mide en promedio qué tanto decae la densidad de las réplicas luego del evento.
     \item $b$ es el parámetro de la Ley de Gutenberg-Richter, el $b \sim 1$ para la región de estudio. Mide la relación entre la magnitud y la frecuencia de los eventos sísmicos.
     \item $m_i$ es la magnitud del evento principal $i$ que debe superar por lo anterior dicho a $m_c$.
     \item $t_j - t_i$ es el intervalo de tiempo entre los eventos $i$ y $j$, el cual debe ser positivo para que el evento $j$ pueda ser considerado como una réplica del evento $i$.
     \item $10^{-b(m_i)}$ ayudará a establecer que a grandes magnitudes la distancia $\eta_{ij}$ deberá ser más cercana.
 \end{itemize}
+
 Y para cada evento $j$ se buscará su padre $i$ que minimice la distancia de interacción $\eta_{ij}$, es decir, el evento principal más cercano en el tiempo y espacio. Como siguiente paso, se deberá calcular las interacciones temporales y espaciales, normalizadas por un factor en función de la magnitud del evento principal:
 \begin{equation}
     T_{ij} = 10^{-qb(m_i)}(t_j - t_i), \quad R_{ij} = 10^{-pb(m_i)}r_{ij}^{d_f},
 \end{equation}
 con $p+q=1$, y $p,q \in [0,1]$. En este caso se tomará $p = 0.5$ y $q = 0.5$, para dar el mismo peso a la interacción temporal y espacial.
-\newline
+
 Con las ecuaciones de interacción temporal y espacial, se puede definir una interacción $\eta_{j}$, el cual se define en función de $\log_{10}(T_{j})$ y $\log_{10}(R_{j})$, y se puede calcular como:
 \begin{equation}
     \log_{10}(\eta_{j}) = \log_{10}(T_{j}) + \log_{10}(R_{j})
 \end{equation}
+
 Notemos que el valor de $\eta_{j}$ mide la distancia entre los eventos $j$ y sus padres, y medirá la dependencia temporal y espacial entre estos. Si $T_j \rightarrow 0$ y/o $R_j \rightarrow 0$, entonces $\eta_{j} \rightarrow 0$, lo cual significa que el evento $j$ es una réplica del sismo padre. Por otro lado, 
-si $\eta_{j} \rightarrow \infty$, entonces el evento $j$ es independiente del evento principal porque estará más alejado en el tiempo o espacio.\newline
-Además, esta interacción con datos sismicos generará una distribución bimodal, pues, presentará dos modas por la mezcla de dos comportamientos, en este caso; una rama se caracterizará por los eventos que estén elajados (lejanía temporal o espacial), en cambio la otra rama tendrá los sismos más cercanos al 
+si $\eta_{j} \rightarrow \infty$, entonces el evento $j$ es independiente del evento principal porque estará más alejado en el tiempo o espacio.
+
+\subsection{Distribución bimodal de $\log_{10}(\eta)$}
+Además, esta interacción con datos sísmicos generará una distribución bimodal, pues presentará dos modas por la mezcla de dos comportamientos, en este caso; una rama se caracterizará por los eventos que estén alejados (lejanía temporal o espacial), en cambio la otra rama tendrá los sismos más cercanos al 
 evento principal, clasificándolos como dependientes.
+
 \begin{figure}[H]
-    
     \centering
-    \includegraphics[width=0.75\textwidth]{imagenes/log(eta).png} % Cambia por la ruta exacta de tu imagen
+    \includegraphics[width=0.75\textwidth]{imagenes/log(eta).png}
     \caption{Distribución empírica de la distancia espacio-temporal normalizada en escala logarítmica ($\log_{10}(\eta)$) obtenida mediante el algoritmo de Zaliapin.}
     \label{fig:Zaliapin_hist}
 \end{figure}
+
 Como se mencionó y se observa en el gráfico anterior, el histograma de los valores $\log_{10}(\eta)$ presenta dos comportamientos con modas diferentes. La rama izquierda, con valores mucho más negativos, concentra los eventos dependientes; en ella, la proximidad espacial y temporal respecto a un evento principal es alta ($\eta_j = T_j \cdot R_j \approx 0$). Por otro lado, la rama derecha, con una concentración alrededor de $-2$, agrupa los eventos independientes, ya que los valores de $\eta_j$ se alejan de 0 al no mostrar cercanía espacial ni temporal respecto al evento principal.
 
+\subsection{Estimación del umbral mediante mixtura de normales}
 Para separar ambas ramas, existen varios criterios: (i) tomar el mínimo local de la densidad empírica en la zona de transición entre ambas modas como umbral; o (ii) ajustar una mezcla de dos distribuciones normales a los valores de $\log_{10}(\eta)$ y tomar como umbral el punto de intersección entre ambas densidades ajustadas.
+
 En este trabajo se optó por el criterio analítico de estimar una mixtura de distribuciones normales. Para lograrlo se empleó el algoritmo Expectación–Maximización (EM) para mixtura de normales (Benaglia, T., Chauveau, D., Hunter, D. R., $\&$ Young, D. S. (2009)) implementado en el paquete \textbf{mixtools} de R. Una vez aplicado y obtenidos
-los parámetros necesarios: vector de pesos $\lambda$ vector de medias $\mu$, vector de desviaciones estándar $\sigma$. El umbral $\eta_0$ se define como el valor de $log_{10}(\eta_j)$ donde las dos densidades ajustadas se intersecan, lo que corresponde al punto de separación entre los eventos dependientes e independientes. \newline
+los parámetros necesarios: vector de pesos $\lambda$, vector de medias $\mu$, vector de desviaciones estándar $\sigma$. El umbral $\eta_0$ se define como el valor de $\log_{10}(\eta_j)$ donde las dos densidades ajustadas se intersecan, lo que corresponde al punto de separación entre los eventos dependientes e independientes.
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\textwidth]{imagenes/log(eta)1.png} % Cambia por la ruta exacta de tu imagen
-    \caption{Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) y independientes (cola derecha) y el umbral de separación entre las poblaciones.}
+    \includegraphics[width=0.55\textwidth]{imagenes/log(eta)1.png}
+    \caption{Mezcla de dos distribuciones normales ajustadas a cada moda y miden el comportamiento de las poblaciones dependientes (cola izquierda) e independientes (cola derecha) y el umbral de separación entre las poblaciones.}
     \label{fig:Zaliapin_hist_mixed}
 \end{figure}
+
+\subsection{Función auxiliar de diferencia}
 El umbral se obtuvo de resolver $f(x)=0$ con $f$ una función auxiliar, definida como:
 \begin{equation}
     f(x) = \lambda_1\, f_{\mu_1,\sigma_1}(x) - \lambda_2\, f_{\mu_2,\sigma_2}(x),
-    \qquad x \in [\min(\mu_1,\mu_2),\ \max(\mu_1,\mu_2)].
+    \qquad x \in [\min(\mu_1,\mu_2),\ \max(\mu_1,\mu_2)],
+    \qquad \lambda_1,\lambda_2 >0.
 \end{equation}
-Donde, $f_{\mu_i, \sigma_i}$ es la densidad normal de cada población $i$. Con el resultado de que nuestro umbral $\eta_0\eqsim-3.239$.
+Donde $f_{\mu_i, \sigma_i}$ es la densidad normal de cada población $i$. Con el resultado de que nuestro umbral es $\eta_0\approx-3.239$.
+
+Se tratará cada moda de cada población como la moda de cada distribución normal, que justamente coincide con su media, y ahora supongamos que sin pérdida de generalidad, que $\mu_1<\mu_2$. Entonces en el intervalo $[\mu_1,\mu_2]$ la densidad $f_{\mu_1,\sigma_1}$ es decreciente pues a la derecha de su media la densidad normal decrece y $f_{\mu_2,\sigma_2}$ es creciente pues a la izquierda de su media la densidad normal crece.
+Por lo tanto, la función $f$ es continua y decreciente en $[\mu_1,\mu_2]$ debido a que la suma de una función decreciente y del negativo de una función creciente, ambas decrecientes, es decreciente. Se cumple también que $f(\mu_1)>0$ y $f(\mu_2)<0$, debido a que se tiene que $f_{\mu_1,\sigma_1}(\mu_1)>f_{\mu_2,\sigma_2}(\mu_1)$ y $f_{\mu_2,\sigma_2}(\mu_2)>f_{\mu_1,\sigma_1}(\mu_2)$, dado que el valor máximo de una normal $h$ se encuentra en su media, es decir, $h_{\mu,\sigma}(\mu)>h_{\mu,\sigma}(x) \ \forall x\in \text{dom}(h_{\mu,\sigma})$.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/mix-norm.jpeg}
+    \caption{Comportamiento de las densidades en las proximidades de sus medias. Dado que cada componente alcanza su máximo en $\mu_i$.}
+    \label{fig:mix-norm}
+\end{figure}
+
+Entonces por el Teorema del Valor Intermedio (Bolzano, 1817), se tiene que la función $f$ de la ecuación (2.4) posee una raíz; en este caso es el umbral que separará los datos dependientes e independientes.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.55\textwidth]{imagenes/f1-f2.png}
+    \caption{Función diferencia $f(x) = \lambda_1\, f_{\mu_1,\sigma_1}(x) - \lambda_2\, f_{\mu_2,\sigma_2}(x)$. Se evidencia el umbral como la raíz de la función $f$ (2.4).}
+    \label{fig:diff_f1,f2}
+\end{figure}
+
+\subsection{Análisis de dependencia temporal: Pruebas de Ljung-box y Rachas}
+Ahora con el nuevo catálogo de eventos sísmicos desclusterizados, se vuelve a realizar el análisis de dependencia temporal mediante las pruebas de Ljung-Box y Rachas. 
+Se espera que los resultados de estas pruebas indiquen independencia temporal, lo cual confirmaría la efectividad del proceso de desclusterización.
+\begin{table}[H]
+    \centering
+    \begin{minipage}[t]{0.47\textwidth}
+        \centering
+        \begin{tabular}{lc}
+            \hline
+            \multicolumn{2}{c}{\textbf{Prueba de Ljung-Box}} \\
+            \hline
+            Estadístico & 0.2925 \\
+            p-valor     & 0.5886 \\
+            \hline
+            \multicolumn{2}{c}{\textit{Existe independencia temporal}} \\
+            \hline
+        \end{tabular}
+    \end{minipage}
+    \hfill
+    \begin{minipage}[t]{0.47\textwidth}
+        \centering
+        \begin{tabular}{lc}
+            \hline
+            \multicolumn{2}{c}{\textbf{Prueba de Rachas}} \\
+            \hline
+            Estadístico & 0.6497 \\
+            p-valor     & 0.5159 \\
+            \hline
+            \multicolumn{2}{c}{\textit{Existe independencia temporal}} \\
+            \hline
+        \end{tabular}
+    \end{minipage}
+    
+    \caption{Diagnóstico de dependencia temporal \textbf{después} de la desclusterización. Ambas pruebas confirman la independencia temporal de los eventos sísmicos principales.}
+    \label{tab:pruebas-temporales-post}
+\end{table}
 
 
+\section{Análisis exploratorio del catálogo desclusterizado}   
+Una vez que se ha obtenido un catálogo de eventos sísmicos independientes en la componente temporal y a la vez también la independencia de las diferencias estocásticas, se procede a realizar un análisis exploratorio de los datos. 
+Este análisis tiene como objetivo identificar patrones, tendencias y características relevantes de los eventos sísmicos principales, así como evaluar la distribución de magnitudes y la densidad espacial de los sismos.
+  \subsection{Densidad espacial}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.76\textwidth]{imagenes/densidad.png}
+    \caption{Intensidad de eventos sísmicos principales en la región de estudio. Se observa una mayor concentración de eventos en las zonas cercanas a fallas geológicas activas.}
+    \label{fig:densidad_espacial}
+\end{figure}
+La distribución espacial de los epicentros evidencia un patrón heterogéneo con las zonas de mayor densidad concentradas en el Cinturón de Fuego del Pacífico, desde el oeste de México, pasando por centroamérica y la cordillera de los Andes,
+pasando a lo largo de Colombia, Ecuador, Perú y Chile. Estas concentraciones coinciden con los bordes de placa activos, donde la actividad sísmica es más intensa debido a la interacción de las placas tectónicas.
+lo cual es consistente con la tectónica regional y respalda la hipótesis de que la sismicidad no es homogénea en el espacio.
 
+{\setlength{\emergencystretch}{1em}
+Este comportamiento espacialmente no homogéneo, más adelante, justificará la incorporación de covariables geográficas y geológicas en el modelado del parámetro de escala de la GPD, ya que la intensidad sísmica no puede considerarse constante sobre el dominio de estudio.\par}
 
-
-%Describir el procedimiento que ha sido utilizado para el desarrollo del componente, el cual depende del método seleccionado (hipotético-deductivo, inductivo, entre otros).
-
-%Se sugiere incluir, en los casos pertinentes:
-%\begin{enumerate}
-%    \item Enfoque (cualitativo, cuantitativo o mixto).
-%    \item Tipo de trabajo: exploratorio, descriptivo, explicativo, experimental, estudio de casos, entre otros.
-%    \item Técnica de recolección de información (entrevistas, cuestionarios, análisis documental, entre otras).
-%    \item Técnica de análisis de la información.
-%\end{enumerate}
-
-%Este capítulo debe incluir toda la información necesaria para que un interesado pueda replicar el componente sin dificultades. Se debe mencionar explícitamente cuáles actividades se realizaron para cumplir con los objetivos planteados. 
-
-%\textbf{Observación:} Para este capítulo se sugiere un máximo del 50\% de la extensión del documento.
+  \subsection{Serie temporal Acumulada y tasa de ocurrencia}
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.76\textwidth]{imagenes/st eventos.png}
+    \caption{Serie temporal acumulada de eventos sísmicos principales.}
+    \label{fig:serie_temporal}
+\end{figure}
+ \subsection{Distribución de magnitudes}
