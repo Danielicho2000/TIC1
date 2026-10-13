@@ -52,6 +52,9 @@
 
 \RequirePackage{float} % Ajuste de figuras y tablas
 
+\usepackage{booktabs} % Para \toprule, \midrule y \bottomrule
+\usepackage{float}
+
 
 % ========== Ajustes generales
 

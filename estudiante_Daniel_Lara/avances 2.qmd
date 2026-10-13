@@ -32,19 +32,19 @@ library(dplyr)
 library(tseries)
 
 # Cargar datos
-datos <- readRDS("D:\\PROYECTO\\Seismic\\input\\sismicevents.rds")
+datos <- readRDS("D:\\TIC1\\input\\earthquake copy.rds")
 
 datos <- datos %>%
   st_drop_geometry() %>%
   mutate(
     time = as.POSIXct(time, format = "%Y-%m-%d %H:%M:%S", tz = "UTC")
   ) %>%
-  filter(
-    tolower(magType) %in% c("mw", "mwc", "mwb", "mww", "mwr", "mwp"),
-    time >= as.POSIXct("1984-01-01", tz = "UTC")
-  ) %>%
+  # filter(
+  #   tolower(magType) %in% c("mw", "mwc", "mwb", "mww", "mwr", "mwp"),
+  #   time >= as.POSIXct("1984-01-01", tz = "UTC")
+  # ) %>%
   arrange(time)
-
+datos <- datos[datos$time >= as.Date("2010-01-01"), ]
 #dim 10122 x 8
 ```
 
@@ -80,7 +80,7 @@ umbral_mc <- estimar_mc_maxc(datos$magnitude)
 ```
 
 ```{r}
-Mc <- umbral_mc
+Mc <- 4.5
 datos<- datos[datos$magnitude >= Mc, ]
 cat("Eventos con M >=", Mc, ":", nrow(datos), "\n")
 ```
@@ -116,6 +116,9 @@ cat("Mc robusto (R² ≥ 0.98):", Mc_nuevo, "\n")
 ```
 
 ```{r}
+library(dplyr)
+library(ggplot2)
+
 bin_width <- 0.1
 
 freq <- datos %>%
@@ -123,63 +126,65 @@ freq <- datos %>%
   count(mag_bin, name = "N") %>%
   arrange(mag_bin) %>%
   mutate(
-    N_acum = rev(cumsum(rev(N))),   # eventos con M >= mag_bin
+    N_acum = rev(cumsum(rev(N))),
     logN   = log10(N_acum)
   )
 
 # ============================================================
-# 2. DEFINIR Mc  (ajusta al valor que hayas elegido)
+# Mc
 # ============================================================
-Mc <- 5.4   # <-- cambia aquí tu Mc final
+Mc <- 1.8   # <-- ajusta a tu Mc real
 
-# ============================================================
-# 3. AJUSTE LINEAL G-R  (solo con M >= Mc)
-# ============================================================
-sub <- freq %>% filter(mag_bin >= Mc)
-
+sub  <- freq %>% filter(mag_bin >= Mc)
 fit  <- lm(logN ~ mag_bin, data = sub)
-a    <- coef(fit)[1]        # intercepto
-b    <- -coef(fit)[2]       # b-value (positivo)
+a    <- coef(fit)[1]
+b    <- -coef(fit)[2]
 r2   <- summary(fit)$r.squared
 n_sub <- nrow(sub)
 
-cat(sprintf("log10(N) = %.3f - %.3f*M   |   b = %.3f   |   R2 = %.4f\n",
-            a, b, b, r2))
+cat(sprintf("log10(N) = %.3f - %.3f*M | b = %.3f | R2 = %.4f | N = %d\n",
+            a, b, b, r2, n_sub))
 
 # ============================================================
-# 4. GRÁFICO G-R
+# Datos para el gráfico
 # ============================================================
 freq_plot <- freq %>%
   mutate(grupo = ifelse(mag_bin >= Mc,
                         paste0("M \u2265 ", Mc),
                         paste0("M < ",  Mc)))
 
+# Posición vertical de la etiqueta: un poco debajo del máximo
+y_max   <- max(freq_plot$logN, na.rm = TRUE)
+y_label <- y_max * 0.92
+
+# ============================================================
+# Gráfico
+# ============================================================
 p_gr <- ggplot(freq_plot, aes(x = mag_bin, y = logN)) +
-  # Puntos por encima y por debajo de Mc
   geom_point(aes(color = grupo), size = 2.4) +
-  # Recta ajustada sobre M >= Mc
   geom_abline(intercept = a, slope = -b,
               color = "blue", linewidth = 1) +
-  # Línea vertical de Mc
   geom_vline(xintercept = Mc, linetype = "dashed",
              color = "red", linewidth = 0.8) +
-  # Etiqueta de Mc
-  annotate("text",
-           x = Mc, y = max(freq_plot$logN),
-           label = paste0("Mc = ", Mc),
-           hjust = -0.1, vjust = 1,
-           color = "red", fontface = "bold") +
-  # Colores
-  scale_color_manual(values = c(
-    setNames("gray60",    paste0("M < ",  Mc)),
-    setNames("firebrick", paste0("M \u2265 ", Mc))
-  )) +
-  # Etiquetas
+  # Etiqueta de Mc desplazada hacia la derecha y un poco abajo
+  annotate("label",
+           x = Mc + 0.6, y = y_label,
+           label = paste0("M[c] == ", Mc),
+           parse = TRUE,
+           color = "red", fontface = "bold",
+           fill = "white", label.size = 0.3) +
+  scale_color_manual(
+    values = c(
+      "gray60"    = "gray60",
+      "firebrick" = "firebrick"
+    ),
+    breaks = c(paste0("M \u2265 ", Mc), paste0("M < ", Mc))
+  ) +
   labs(
     title    = "Relaci\u00f3n Frecuencia-Magnitud (Gutenberg-Richter)",
     subtitle = sprintf(
       "log\u2081\u2080(N) = %.2f \u2212 %.2f\u00b7M   |   b = %.2f   |   R\u00b2 = %.3f   |   N = %d eventos (M \u2265 Mc)",
-      a, b, b, r2, nrow(sub)),
+      a, b, b, r2, n_sub),
     x = "Magnitud (M)",
     y = expression(log[10](N)),
     color = NULL
@@ -200,17 +205,51 @@ NO ES QUE HAYA MENOS TERREMOS, AHORA PODEMOS MEDIRLOS
 Desde que fecha?
 
 ```{r}
-barplot(table(format(datos$time, "%Y")),
-        main = "Eventos por año",
-        xlab = "Año", ylab = "N eventos",
-        col = "steelblue", border = "white",
-        las = 2, cex.names = 0.5)
+# Tabla de eventos por año
+tabla <- table(format(datos$time, "%Y"))
+anios <- as.numeric(names(tabla))
+n     <- length(tabla)
+
+# Ancho del gráfico: barplot devuelve las posiciones x de las barras
+bp <- barplot(tabla,
+              main   = "Eventos por año",
+              xlab   = "Año",
+              ylab   = "N eventos",
+              col    = "steelblue",
+              border = "white",
+              xaxt   = "n")     # <-- suprime el eje x por defecto
+
+# Eje x: etiquetas cada 10 años, marcas menores cada 5
+etiquetas_decada <- anios[anios %% 3 == 0]
+posiciones <- bp[match(etiquetas_decada, anios)]
+
+axis(side = 1,
+     at = posiciones,
+     labels = etiquetas_decada,
+     las = 2,
+     cex.axis = 0.9,
+     tick = TRUE)
+
+# Marcas menores cada 5 años (opcional)
+etiquetas_quinquenales <- anios[anios %% 2 == 0 & anios %% 10 != 0]
+posiciones_menores <- bp[match(etiquetas_quinquenales, anios)]
+axis(side = 1,
+     at = posiciones_menores,
+     labels = FALSE,
+     tcl = -0.3)
+
+# Resaltar el pico máximo
+abline(v = bp[which.max(tabla)], col = "red", lty = 2, lwd = 1)
+text(x = bp[which.max(tabla)],
+     y = max(tabla) * 0.95,
+     labels = paste0("Máx: ", max(tabla)),
+     col = "red", pos = 2, cex = 0.9)
 ```
 
 Hay una brecha entre el año 72 y 83, no se puede trabajar con eso, tomamos desde el 84 la muestra
 
 ```{r}
-datos <- datos[datos$time >= as.Date("1984-01-01"), ]
+datos <- datos[datos$time >= as.Date("2010-01-01"), ]
 ```
 
 ### Diágnostico de independencia
@@ -248,7 +287,7 @@ mayor a pi\*r\^2: agrupamiento
 porque los modelos EVgam exigen independencia entre tiempos (no exista cluster)
 
 ```{r}
-decluster_zaliapin <- function(datos, Mc = 5.4, df = 1.2, b = 1.0, verbose = TRUE) {
+decluster_zaliapin <- function(datos, Mc = Mc, df = 1.2, b = 1.0, verbose = TRUE) {
   
   # --- 1. Filtrar y ordenar ---
   datos <- datos[datos$magnitude >= Mc, ]
@@ -326,7 +365,7 @@ decluster_zaliapin <- function(datos, Mc = 5.4, df = 1.2, b = 1.0, verbose = TRU
 ```
 
 ```{r}
-resultado_zal_1980 <- decluster_zaliapin(datos, Mc = 5.4, df = 1.2, b = 1.0)
+resultado_zal_1973 <- decluster_zaliapin(datos, Mc = 4.5, df = 1.2, b = 1.0)
 ```
 
 eje x: qué tan "cerca" (en espacio, tiempo y energía) está un sismo de otro anterio
@@ -341,20 +380,20 @@ generar_catalogo_aleatorizado <- function(datos) {
 
 ```{r}
 # --- 6. Calcular eta y su logaritmo ---
-resultado_zal_1980$eta <- resultado_zal_1980$T_j * resultado_zal_1980$R_j
-resultado_zal_1980$log_eta <- log10(resultado_zal_1980$eta)
+resultado_zal_1973$eta <- resultado_zal_1973$T_j * resultado_zal_1973$R_j
+resultado_zal_1973$log_eta <- log10(resultado_zal_1973$eta)
 
 # --- 7. Graficar el histograma con el umbral ---
 umbral_zaliapin <- -4  # Puedes ajustar este valor según el valle observado
 
-hist(resultado_zal_1980$log_eta, breaks = 50, col = "lightblue",
+hist(resultado_zal_1973$log_eta, breaks = 50, col = "lightblue",
      main = "Distribución de log10(eta) - Método Zaliapin",
      xlab = "log10(eta)", ylab = "Frecuencia")
 ```
 
 ```{r}
 library(mixtools)
-log_eta <- resultado_zal_1980$log_eta
+log_eta <- resultado_zal_1973$log_eta
 log_eta_clean <- log_eta[is.finite(log_eta)]
 set.seed(123) # Semilla para asegurar la reproducibilidad en tu tesis
 gmm_modelo <- normalmixEM(log_eta_clean, k = 2, maxit = 1000, epsilon = 1e-8)
@@ -390,13 +429,13 @@ legend("topleft",
 ```
 
 ```{r}
-umbral_zaliapin <- -3.239 
+umbral_zaliapin <- -3.484
 
-catalogo_independiente <- subset(resultado_zal_1980, is.na(log_eta) | log_eta > umbral_zaliapin) #agarramos todos los valores que nos generen la muestra independiente en el tiempo
+catalogo_independiente <- subset(resultado_zal_1973, is.na(log_eta) | log_eta > umbral_zaliapin) #agarramos todos los valores que nos generen la muestra independiente en el tiempo
 catalogo_independiente <- catalogo_independiente[order(catalogo_independiente$time), ]
 
 cat("=== RESULTADO DEL DECLUSTERING ===\n")
-cat("Eventos originales:", nrow(resultado_zal_1980), "\n")
+cat("Eventos originales:", nrow(resultado_zal_1973), "\n")
 cat("Sismos principales independientes:", nrow(catalogo_independiente), "\n\n")
 
 # 4. Verificación matemática de la Independencia Temporal
@@ -431,7 +470,7 @@ datos_ind<-catalogo_independiente
 
 **Independencia temporal estricta:** La ocurrencia de un evento no debe condicionar la probabilidad de que ocurra el siguiente en el tiempo. Esto valida el supuesto matemático del Proceso de Poisson unidimensional. Ya cubriste este requisito al eliminar las réplicas con el algoritmo de Zaliapin y verificar los tiempos de inter-llegada con las pruebas estadísticas. (LISTO)
 
-### Análisis exploratorio 
+### Análisis exploratorio
 
 ```{r, warning=FALSE}
 library(spatstat)
@@ -447,7 +486,8 @@ X <- ppp(
 ```
 
 ```{r}
-dens <- density.ppp(X, sigma = 2, dimyx = 512)
+library(viridis)
+dens <- density.ppp(X, sigma = 0.5, dimyx = 512)
 plot(dens, main = "Mapa de calor de la intensidad estimada",
      col = viridis(100),
      zlim = c(0, quantile(dens, 0.99)))
@@ -456,29 +496,95 @@ plot(dens, main = "Mapa de calor de la intensidad estimada",
 Serie temporal acumulada de eventos principales
 
 ```{r}
-# --- Serie temporal acumulada ---
-plot(datos$time, 1:nrow(datos),
-     type = "s", col = "steelblue", lwd = 2,
-     xlab = "Tiempo", ylab = expression(N(t)),
-     main = "Serie temporal acumulada de eventos principales",
-     cex.main = 1.4, cex.lab = 1.2)
+umbral <- 4.5
+library(ggplot2)
 
-# Línea de referencia: recta entre (t_min, 0) y (t_max, N)
-lines(c(min(datos$time), max(datos$time)),
-      c(0, nrow(datos)),
-      col = "red", lty = 2, lwd = 2)
+ggplot(datos_ind, aes(x = magnitude)) +
+  geom_histogram(bins = 30, fill = "steelblue", color = "black") +
+  labs(x = "Magnitud", y = "Frecuencia",
+       title = "Histograma de magnitudes") +
+  theme_minimal()
 
-legend("topleft",
-       legend = c("N(t) observado", "Tasa constante esperada (HPP)"),
-       col = c("steelblue", "red"), lty = c(1, 2), lwd = 2, bty = "n")
+datos_filtrados <- subset(datos_ind, magnitude > umbral)
+datos_filtrados$periodo <- cut(datos_filtrados$time, breaks = "1 year")
+
+conteo <- table(datos_filtrados$periodo)
+conteo <- conteo[conteo > 0]
+
+años <- as.integer(substr(names(conteo), 1, 4))
+valores <- as.numeric(conteo)
+fit_loess <- loess(N_anual ~ anios, span = 0.5)  # span: 0.2 (muy flexible) a 0.8 (muy suave)
+
+plot(anios, N_anual, type = "l", col = "gray60",
+     main = "Sismos M > 4.5 por año",
+     xlab = "Año", ylab = "N eventos")
+lines(anios, predict(fit_loess), col = "firebrick", lwd = 2)
+grid()
 ```
 
-Análisis de Picos sobre el Umbral (POT)
+```{r}
+# --- 0. Verificar el tipo de dato ---
+str(datos_filtrados$time)
+class(datos_filtrados$time)
+
+# --- 1. Convertir time a numérico (días) ---
+tiempos <- as.numeric(datos_filtrados$time)
+tiempos <- sort(tiempos)
+cat("Rango temporal:", min(tiempos), "a", max(tiempos), "\n")
+cat("N eventos:", length(tiempos), "\n")
+
+# --- 2. Definir ventana h ---
+h <- 365.25  # 1 año en días
+
+# --- 3. Crear cortes y contar ---
+cortes <- seq(min(tiempos), max(tiempos) + h, by = h)
+conteos <- sapply(1:(length(cortes)-1), function(i) {
+  sum(tiempos >= cortes[i] & tiempos < cortes[i+1])
+})
+
+# --- 4. Verificar que haya conteos ---
+cat("N ventanas:", length(conteos), "\n")
+cat("Resumen de conteos:\n")
+print(summary(conteos))
+cat("Media:", mean(conteos), "\n")
+
+# --- 5. Gráfico ---
+brk <- seq(-0.5, max(conteos) + 0.5, by = 1)
+
+hist(conteos,
+     breaks = brk,
+     col = "steelblue", border = "white",
+     xlab = "Número de sismos por año",
+     ylab = "Frecuencia",
+     main = "Conteos anuales vs Poisson",
+     cex.main = 1.4, cex.lab = 1.2,
+     freq = TRUE)
+
+# Superponer Poisson teórica
+x_vals <- 0:max(conteos)
+y_teor <- dpois(x_vals, mean(conteos)) * length(conteos)
+
+lines(x_vals, y_teor,
+      col = "red", lwd = 2, type = "o", pch = 16)
+
+legend("topright",
+       legend = c("Observado", "Poisson teórica"),
+       col = c("steelblue", "red"),
+       lwd = 2, pch = c(15, 16), bty = "n")
+```
+
+Análisis de Picos sobre el Umbral (POT) fault
 
 ```{r}
+library(extRemes)
+library(evd)
 # Gráfico de Vida Media Remanente
 mrlplot(datos_ind$magnitude, main="Gráfico de Vida Media Remanente para Sismos")
 # Gráfico de elección de umbral (tcplot)
+
+```
+
+```{r}
 limites_umbral <- quantile(datos_ind$magnitude, probs = c(0.05, 0.95))
 tcplot(datos_ind$magnitude, tlim=limites_umbral)
 ```
@@ -489,11 +595,17 @@ Tomamos el valor de $\mu=6$ como nuestro umbral, $\xi>0$ nos mostraría que las 
 
 ### Excedencias
 
+como defino excedencia
+
+porque defino excedencias
+
+como las uso
+
 ```{r}
 excedencias_evgam <- datos_ind %>%
-  filter(magnitude>6)%>%
+  filter(magnitude>5.2)%>%
   mutate(
-    excess = magnitude - 6,
+    excess = magnitude - 5.2,
     year_decimal = year(time) + (yday(time) / 365.25),
     time_days = as.numeric(difftime(time, min(time), units = "days"))
   ) %>%
@@ -543,10 +655,12 @@ abline(0, 1, col = "red")
 ```{r}
 excedencias_evgam$time_years <- excedencias_evgam$time_days / 365.25
 fit_evgam_lineal <- evgam(
-  formula = list(excess ~ time_years, ~ 1),
+  formula = list(excess ~ nearest_fault_dist, ~ 1),
   data = excedencias_evgam,
   family = "gpd"
 )
+summary(fit_evgam_lineal)
+coef(fit_evgam_lineal)
 ```
 
 ```{r}
@@ -920,7 +1034,7 @@ residuos_limpios <- residuos_todos[
 ```
 
 ```{r}
-acf(residuos_limpios$m2, main = "ACF de los Residuos del Modelo M5", lag.max = 30)
+acf(residuos_limpios$m3, main = "ACF de los Residuos del Modelo M5", lag.max = 30)
 ```
 
 ##### Gráfico: Residuos vs Exp(1)
@@ -935,11 +1049,11 @@ df_qq_long <- residuos_limpios %>%
   pivot_longer(cols = c(
     #m6,
      #m5, 
-        m0, 
+    #    m0, 
     #    m1,
-    #    m2,
-    #    m3,
-    #m4
+     #   m2,
+     #   m3,
+    m4
   ), 
   names_to = "Modelo", 
   values_to = "Residual") %>%

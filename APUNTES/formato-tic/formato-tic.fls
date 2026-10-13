@@ -143,6 +143,8 @@ INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\textcase\textcase.st
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\textcase\textcase.sty
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\float\float.sty
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\float\float.sty
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\booktabs\booktabs.sty
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\booktabs\booktabs.sty
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pbk.fd
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pbk.fd
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\t1pbk.fd
@@ -270,19 +272,19 @@ INPUT Capitulos-Anexos\cap-01.tex
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkd8t.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\bookman\pbkd8t.vf
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkd8r.tfm
-INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkli8t.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx12.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx8.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\public\cm\cmbx6.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8t.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8t.tfm
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1pbk.fd
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1pbk.fd
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\tex\latex\psnfss\ts1pbk.fd
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8c.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkli8t.tfm
+INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\bookman\pbkl8c.vf
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\bookman\pbkli8t.vf
 INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkli8r.tfm
-INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8t.tfm
-INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\tfm\adobe\bookman\pbkl8t.tfm
-INPUT C:\Users\USER\AppData\Local\Programs\MiKTeX\fonts\vf\adobe\bookman\pbkl8c.vf
 INPUT .\Capitulos-Anexos\cap-02.tex
 INPUT .\Capitulos-Anexos\cap-02.tex
 OUTPUT Capitulos-Anexos\cap-02.aux
@@ -387,6 +389,27 @@ INPUT .\imagenes\st eventos.png
 INPUT .\imagenes\st eventos.png
 INPUT .\imagenes\st eventos.png
 INPUT .\imagenes\st eventos.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\hist_mag.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\scale.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
+INPUT .\imagenes\shape.png
 INPUT .\Capitulos-Anexos\cap-03.tex
 INPUT .\Capitulos-Anexos\cap-03.tex
 OUTPUT Capitulos-Anexos\cap-03.aux

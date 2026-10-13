@@ -28,6 +28,12 @@ Daryl~J. Daley and David Vere-Jones.
   General Theory and Structure}.
 \newblock Springer Science \& Business Media, New York, 2nd edition, 2008.
 
+\bibitem{waverley1954report}
+{Lord Waverley}.
+\newblock Report of the departmental committee on coastal flooding.
+\newblock Technical Report Cmd. 9165, Her Majesty's Stationery Office, London,
+  1954.
+
 \bibitem{moraga2023spatial}
 Paula Moraga.
 \newblock {\em Spatial Statistics for Data Science: Theory and Applications
@@ -36,6 +42,11 @@ Paula Moraga.
 \newblock El Capítulo sobre Complete Spatial Randomness detalla las pruebas de
   hipótesis y funciones diagnósticas para el modelamiento de patrones
   puntuales.
+
+\bibitem{pickands1975statistical}
+James Pickands.
+\newblock Statistical inference using extreme order statistics.
+\newblock {\em The Annals of Statistics}, 3(1):119--131, 1975.
 
 \bibitem{youngman2022evgam}
 Benjamin~D. Youngman.

@@ -1112,7 +1112,7 @@ knitr::kable(tabla_comparativa, digits = 4, caption = "Métricas de Selección y
 
 Contrastamos la distribución de los residuos de Cox-Snell estandarizados frente a la distribución teórica exponencial para los cinco escenarios de excedencia.
 
-$$R_t = \frac{1}{\hat{\xi}_t} \log \left( 1 + \hat{\xi}_t \frac{Y_t - u}{\hat{\sigma}_t} \right)$$
+$$R_t = \frac{1}{\hat{\xi}_t} \log \left( 1 + \hat{\xi}_t \frac{X_t - u}{\hat{\sigma}_t} \right)$$
 
 Si los residuos llegan a ser iid, la distribución llega a converger a una exp(1).
 
@@ -1131,7 +1131,7 @@ P(R\leq r)=& P(-log(1-U)\leq r) \\
 
 Así, notemos que:
 
-$$R=-log(1-U)=\frac{1}{\hat{\xi}} \log \left( 1 + \hat{\xi} \frac{Y - u}{\hat{\sigma}} \right) \sim \text{Exp}(1)$$
+$$R=-log(1-U)=\frac{1}{\hat{\xi}} \log \left( 1 + \hat{\xi} \frac{X - u}{\hat{\sigma}} \right) \sim \text{Exp}(1)$$
 
 Si los residuos llegan a ser iid, la distribución llega a converger a una exp(1).
 

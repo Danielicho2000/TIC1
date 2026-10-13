@@ -1,32 +1,35 @@
 % !TeX root = ../formato-tic.tex
 \chapter{Metodología}
-Este trabajo busca describir el comportamiento de los eventos sísmicos extremos en relación con variables geográficas y geológicas durante un periodo delimitado. 
-El desarrollo del componente se enmarca en un enfoque cuantitativo, basado en el análisis numérico de registros sísmicos y la estimación matemática de los parámetros de las distribuciones
-probabilísticas que mejor representen los datos empíricos. Para ello, el estudio se fundamenta en la Distribución Generalizada de Pareto (GPD). La selección de este modelo 
-se sustenta en la literatura científica, la cual demuestra su eficacia para el análisis de valores extremos mediante el enfoque de Picos sobre el Umbral (POT), destacando 
-su eficiencia en el uso de datos y su capacidad para modelar directamente las excedencias sobre un umbral físico interpretable.
+Se describe la ocurrencia de eventos sísimicos extremos y el comportamiento en la magnitud en relación a covariables
+físicas y espacio-temporales. El desarrollo del componente se enmarca en un enfoque cuantitativo, basado en el análisis numérico
+del registro de sísmos y en la estimación parámetrica de los modelos probabilísticos que mejor
+llegan a representar los datos. El marco teórico basado en los Procesos Puntuales Marcados (PPM), permite
+describir conjutamente la ocurrencia espacio-temporal de los eventos y su magnitud como la marca del proceso. Por lo tanto
+la formulación de la ocurrencia se modela mediante la función condicional  $\lambda(t,x,y \mid \mathcal{H}_t)$, mientras que
+el comportamiento de los eventos se describe con la ayuda de la teoría de valores extremos, el trabajo abordó el enfoque de Picos
+sobre el Umbral (POT) y la Distribución Generalizada de Pareto (GDP).
+
+La elección de este marco se sustenta en la literatura científica, que demuestra la eficacia de los PPM para representar procesos 
+sísmicos no estacionarios y la de la GPD para modelar excedencias sobre un umbral físicamente interpretable, destacando su 
+eficiencia en el uso de datos frente a esquemas de máximos por bloques. Además, el enfoque POT puede formularse como un proceso
+puntual de Poisson no homogéneo mediante la ocurrencia de mangitudes que sobrepasen un umbral crítico.
 
 El método empleado es de tipo hipotético-deductivo. Se parte de la hipótesis central de que la energía sísmica superior a un umbral base puede ser modelada mediante la distribución GPD, 
 cuyos parámetros fluctúan dinámicamente en función de covariables físicas y espaciotemporales. A partir de esta premisa, se deducen implicaciones estadísticas y se ejecutan pruebas empíricas 
 para validar o refutar la hipótesis, evaluando el ajuste de la distribución al someterla a distintos escenarios. En consecuencia, la investigación presenta un diseño explicativo y correlacional, 
 ya que busca evaluar y cuantificar cómo la interacción de las variables físicas y espaciales determinan el comportamiento del parámetro de escala ($\sigma$) en el modelo de excedencias.
+\section{Base de datos}
 
-\section{Depuración y completitud del catálogo sísmico}
 
-\subsection{Limpieza inicial y selección del tipo de magnitud}
-Un primer paso en el desarrollo del componente consistió en la mejora del catálogo de eventos sísmicos; fue necesario realizar una limpieza de datos en función al tipo de magnitud registrada y sus variantes; 
-se tomó el tipo de magnitud Momento ($M_w$), pues es el tipo de magnitud que nos permite medir el tamaño físico del sismo en función de la energía liberada. También se dividirán datos incompletos, 
-y de ser el caso, determinar la muestra de eventos en función de la calidad de los datos registrados.
-
-Se nota que existe un aumento en el número de eventos sísmicos registrados a lo largo del tiempo, sin embargo existe un periodo de tiempo con datos faltantes, por ende se trabajará con los datos
-siguientes al año 1984, ya que a partir de este año se cuenta con un registro más confiable y consistente.
+Existe un aumento en el número de eventos sísmicos registrados a lo largo del tiempo, como máximo valor tener en el 2014, un registro de 1343 eventos sísmicos. Por ende se trabajó a partir de 
+del primero de enero de 1973. 
 
 \begin{figure}[H]
     \centering
     \begin{tabular}{cc}
         \includegraphics[width=0.48\textwidth]{imagenes/ST-sismos.png} &
         \includegraphics[width=0.48\textwidth]{imagenes/post ST-sismos.png} \\
-        \small (a) Catálogo original. & \small (b) Eventos tras filtrado por $M_c$ y por tiempo.
+        \small (a) Catálogo original. & \small (b) Eventos tras filtrado por $M_c$ y a partir del 2010.
     \end{tabular}
     \caption{Comparación del conteo de eventos sísmicos antes y después del filtrado por magnitud de completitud. No es que hubiera menos sismos, sino que actualmente se registran con mayor precisión instrumental.}
     \label{fig:sismos_comparacion}
@@ -35,7 +38,8 @@ siguientes al año 1984, ya que a partir de este año se cuenta con un registro 
 \subsection{Magnitud de completitud y Ley de Gutenberg-Richter}
 El segundo paso consistió en tener un catálogo fiable y mayormente completo según la Ley de Gutenberg-Richter, la cual describe la relación entre la magnitud y la frecuencia de los sismos, otorgándonos la ventaja de
 encontrar una magnitud mínima de completitud a partir del cual se empieza a considerar una relación log-lineal entre la frecuencia y la magnitud. Como resultado de este análisis, se identificó un umbral
-mínimo de magnitud de $M_c = 5.4$, el cual fue utilizado para filtrar los eventos sísmicos y sea consistente la Ley de Gutenberg-Richter.
+mínimo de magnitud de $M_c = 1.8$, el cual fue utilizado para filtrar los eventos sísmicos y sea consistente la Ley de Gutenberg-Richter. Dado que el análisis de valores extremos requiere una cola superior bien
+definida y que la desclusterización por vecino más cercano pierde validez con magnitudes muy bajas, se adoptó por definir un umbral $M_c=4.5$.
 
 \begin{figure}[H]
     \centering
@@ -44,9 +48,9 @@ mínimo de magnitud de $M_c = 5.4$, el cual fue utilizado para filtrar los event
     \label{fig:gutenberg_richter}
 \end{figure}
 
-\section{Diagnóstico de dependencia espacio-temporal}
+\section{Dependencia espacio-temporal}
 
-\subsection{Dependencia espacial: función K de Ripley}
+
 Ahora, con un catálogo completo y ordenado, se debe hacer un diagnóstico acerca de sus dependencias espacio-temporales, se busca evaluar si dentro de la componente espacial existe la posibilidad de ver 
 CSR, clustering e inhibición. Se espera que se evidencie un patrón de clustering, pues al estar cerca de fallas geológicas los inicios del sismo se concentran en ciertas zonas geográficas, generando un agrupamiento de eventos.
 Una manera sencilla de evaluar esta dependencia espacial es mediante la función K de Ripley, la cual permitirá determinar si existe un patrón en específico.
@@ -54,11 +58,11 @@ Una manera sencilla de evaluar esta dependencia espacial es mediante la función
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.75\textwidth]{imagenes/K-R clust.png}
-    \caption{Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se debe cumplir que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$).}
+    \caption{Función K de Ripley para el catálogo de eventos sísmicos. Para un patrón de clustering, se cumple que $K(r) > \pi r^2$, lo cual se evidencia estadísticamente también con el valor p=0.01 por Envolventes de Monte Carlo que no cumple con CSR ($H_0$).}
     \label{fig:k_ripley}
 \end{figure}
 
-\subsection{Dependencia temporal: pruebas de Ljung-Box y Rachas}
+
 Por lo tanto, en la componente espacial hay certeza de una clusterización de eventos, era lo esperado. Ahora, en cuanto a la dependencia temporal, se busca evaluar si existe un patrón de CSR principalmente; o, secundariamente inhibición o clustering de eventos en el tiempo. 
 Se espera en sismicidad natural, lo habitual. Antes de limpiar el catálogo de datos, es conocido que surge un agrupamiento de eventos sísmicos provocados por las secuencias de réplicas y no por un patrón de CSR, en cuyo caso será necesario aplicar su desclusterización filtrando los eventos que provoquen réplicas en función del intervalo de tiempo entre estos.
 
@@ -75,10 +79,10 @@ de eventos.
             \hline
             \multicolumn{2}{c}{\textbf{Prueba de Ljung-Box}} \\
             \hline
-            Estadístico & 1.2641 \\
-            p-valor     & 0.2609 \\
+            Estadístico & 122.8731  \\
+            p-valor     & 0.0002 \\
             \hline
-            \multicolumn{2}{c}{\textit{Existe independencia temporal}} \\
+            \multicolumn{2}{c}{\textit{Existe dependencia temporal}} \\
             \hline
         \end{tabular}
     \end{minipage}
@@ -89,7 +93,7 @@ de eventos.
             \hline
             \multicolumn{2}{c}{\textbf{Prueba de Rachas}} \\
             \hline
-            Estadístico & $-2.6958$ \\
+            Estadístico & $-11.9653 $ \\
             p-valor     & 0.007 \\
             \hline
             \multicolumn{2}{c}{\textit{Existe dependencia temporal}} \\
@@ -184,8 +188,9 @@ El umbral se obtuvo de resolver $f(x)=0$ con $f$ una función auxiliar, definida
     f(x) = \lambda_1\, f_{\mu_1,\sigma_1}(x) - \lambda_2\, f_{\mu_2,\sigma_2}(x),
     \qquad x \in [\min(\mu_1,\mu_2),\ \max(\mu_1,\mu_2)],
     \qquad \lambda_1,\lambda_2 >0.
+    \label{Ecuación_aux}
 \end{equation}
-Donde $f_{\mu_i, \sigma_i}$ es la densidad normal de cada población $i$. Con el resultado de que nuestro umbral es $\eta_0\approx-3.239$.
+Donde $f_{\mu_i, \sigma_i}$ es la densidad normal de cada población $i$. Con el resultado de que nuestro umbral es $\eta_0\approx-3.484$.
 
 Se tratará cada moda de cada población como la moda de cada distribución normal, que justamente coincide con su media, y ahora supongamos que sin pérdida de generalidad, que $\mu_1<\mu_2$. Entonces en el intervalo $[\mu_1,\mu_2]$ la densidad $f_{\mu_1,\sigma_1}$ es decreciente pues a la derecha de su media la densidad normal decrece y $f_{\mu_2,\sigma_2}$ es creciente pues a la izquierda de su media la densidad normal crece.
 Por lo tanto, la función $f$ es continua y decreciente en $[\mu_1,\mu_2]$ debido a que la suma de una función decreciente y del negativo de una función creciente, ambas decrecientes, es decreciente. Se cumple también que $f(\mu_1)>0$ y $f(\mu_2)<0$, debido a que se tiene que $f_{\mu_1,\sigma_1}(\mu_1)>f_{\mu_2,\sigma_2}(\mu_1)$ y $f_{\mu_2,\sigma_2}(\mu_2)>f_{\mu_1,\sigma_1}(\mu_2)$, dado que el valor máximo de una normal $h$ se encuentra en su media, es decir, $h_{\mu,\sigma}(\mu)>h_{\mu,\sigma}(x) \ \forall x\in \text{dom}(h_{\mu,\sigma})$.
@@ -197,7 +202,7 @@ Por lo tanto, la función $f$ es continua y decreciente en $[\mu_1,\mu_2]$ debid
     \label{fig:mix-norm}
 \end{figure}
 
-Entonces por el Teorema del Valor Intermedio (Bolzano, 1817), se tiene que la función $f$ de la ecuación (2.4) posee una raíz; en este caso es el umbral que separará los datos dependientes e independientes.
+Entonces por el Teorema del Valor Intermedio (Bolzano, 1817), se tiene que la función $f$ de la ecuación \ref{Ecuación_aux} posee una raíz; en este caso es el umbral que separará los datos dependientes e independientes.
 
 \begin{figure}[H]
     \centering
@@ -217,8 +222,8 @@ Se espera que los resultados de estas pruebas indiquen independencia temporal, l
             \hline
             \multicolumn{2}{c}{\textbf{Prueba de Ljung-Box}} \\
             \hline
-            Estadístico & 0.2925 \\
-            p-valor     & 0.5886 \\
+            Estadístico & 0.0607 \\
+            p-valor     & 0.8054 \\
             \hline
             \multicolumn{2}{c}{\textit{Existe independencia temporal}} \\
             \hline
@@ -231,8 +236,8 @@ Se espera que los resultados de estas pruebas indiquen independencia temporal, l
             \hline
             \multicolumn{2}{c}{\textbf{Prueba de Rachas}} \\
             \hline
-            Estadístico & 0.6497 \\
-            p-valor     & 0.5159 \\
+            Estadístico & 0.9769 \\
+            p-valor     & 0.3286  \\
             \hline
             \multicolumn{2}{c}{\textit{Existe independencia temporal}} \\
             \hline
@@ -245,7 +250,7 @@ Se espera que los resultados de estas pruebas indiquen independencia temporal, l
 
 
 \section{Análisis exploratorio del catálogo desclusterizado}   
-Una vez que se ha obtenido un catálogo de eventos sísmicos independientes en la componente temporal y a la vez también la independencia de las diferencias estocásticas, se procede a realizar un análisis exploratorio de los datos. 
+Una vez que se ha obtenido un catálogo de eventos sísmicos independientes en la componente temporal y a la vez también la independencia de las diferencias estocásticas, se procedió a realizar un análisis exploratorio de los datos. 
 Este análisis tiene como objetivo identificar patrones, tendencias y características relevantes de los eventos sísmicos principales, así como evaluar la distribución de magnitudes y la densidad espacial de los sismos.
   \subsection{Densidad espacial}
   \begin{figure}[H]
@@ -261,11 +266,107 @@ lo cual es consistente con la tectónica regional y respalda la hipótesis de qu
 {\setlength{\emergencystretch}{1em}
 Este comportamiento espacialmente no homogéneo, más adelante, justificará la incorporación de covariables geográficas y geológicas en el modelado del parámetro de escala de la GPD, ya que la intensidad sísmica no puede considerarse constante sobre el dominio de estudio.\par}
 
-  \subsection{Serie temporal Acumulada y tasa de ocurrencia}
+  \subsection{Análisis exploratorio del catálogo de sismos desclusterizados}
   \begin{figure}[H]
     \centering
     \includegraphics[width=0.76\textwidth]{imagenes/st eventos.png}
-    \caption{Serie temporal acumulada de eventos sísmicos principales.}
+    \caption{Serie temporal del conteo de eventos que superen el umbral de magnitud propuesto por la ley de Gutenberg-Richter.}
     \label{fig:serie_temporal}
 \end{figure}
- \subsection{Distribución de magnitudes}
+En la figura \ref{fig:serie_temporal} se muestra una variabilidad considerable a lo largo del tiempo, debido a que la desclusterización en la componente 
+temporal elimina los eventos dependientes, lo que genera una serie temporal más estable (cercana al valor medio del Número de Sismos) y menos afectada por agrupamientos de eventos. Algo que se logró comprobar con las pruebas de independencia temporal. Este gráfico confirma de manera visual que 
+la desclusterización temporal ha sido efectiva.
+ \begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\textwidth]{imagenes/hist_mag.png}
+    \caption{Distribución de magnitudes de los eventos sísmicos desclusterizados a escala logaritmica.}
+    \label{fig:distribucion_magnitudes}
+\end{figure}
+
+Por el otro lado, el histograma \ref{fig:distribucion_magnitudes} revela el decaimiento exponencial esperado con la magnitud entre $4.6 \le M \le 7.4$, de acuerdo a la ley de Gutenberg=Ritcher. El ajuste en esta zona produce $b= 0.972$ con $R^2=0.9975$.
+Por encima de $M \approx 7.4$, la frecuencia de eventos con esa marca llega a tener valores de 1 a 2. Además el catálogo contiene eventos hasta $M=8.3$, lo que proporciona $N=8982$ excedencias sobre $\mu=4.5$, 
+suficiente para el análisis POT. Para cada umbral inicial se presenta la cantidad de eventos disponibles que lo superan.
+\begin{table}[H]
+    \centering
+    \begin{tabular}{cc}
+        \toprule
+        Umbral $\mu$ & $N(M > \mu)$ \\
+        \midrule
+        4.50 & 8982 \\
+        4.75 & 4967 \\
+        5.00 & 2248 \\
+        5.25 & 1433 \\
+        5.50 & 709  \\
+        5.75 & 433  \\
+        6.00 & 230  \\
+        6.25 & 144  \\
+        6.50 & 78   \\
+        \bottomrule
+    \end{tabular}
+    \caption{Número de excedencias $N(M > u)$ para distintos umbrales $u$ en el catálogo desclusterizado.}
+    \label{tab:excedencias}
+\end{table}
+
+
+
+\section{Umbral Crítico y Modelamiento mediante GDP}
+Fundamentandose en la convergencia débil de variables, aleatorias, presentamos la variable $m_i-u$ con $m_i$ como la magnitud del evento sísimico i y $u$ un real positivo tal que supera el valor propuesto 
+de la magnitud mínima de G-R. Debemos notar que su función de probabilidad condicionada a las magnitudes que superan $u$.
+\begin{equation}
+    F_u (y)=Pr(M-u\leq y| M-u\ge 0)=\frac{F(u+y)-F(u)}{1-F(u)}, y\ge 0,
+    \cite{pickands1975statistical}
+\end{equation}
+converge débilmente a una GDP cuando $u$ se apróxima al extremo superior del soporte de $F_u$. Formalmente;
+\begin{align}
+    \lim_{u \to x_F} \sup_{y > 0} \left| F_u(y) - GDP(y; \sigma(u), \xi) \right| = 0. \\
+    x_F=sup\{x \in \mathbb{R}: F(x)< 1\}
+\end{align}
+Con la distribución GDP mencionada en \ref{eq:GPD}. 
+
+Es necesario encontrar el umbral crítico $u$ que establecerá la convergencia hacia una GDP. La elección del umbral $u$ muchas veces se es escogido según el objetivo de la actividad, por ejemplo medir que tanto
+resistirá la barrera que separa al mar. \cite{waverley1954report} 
+
+Pero en este caso la selección de $u$ se la hizo mediante un enfoque visual a la gráficas de \textit{tcplot}, buscando la estabilidad de cada parámetro de la GDP, es decir, que el valor del parámetro no cambie en
+función de la elección del umbral. Se busca que se cumpla para cada parámetro:
+\begin{itemize}
+    \item $X_i$ sea invariante al umbral.
+\end{itemize}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/scale.png}
+    \caption{Gráfico de elección de umbral (\texttt{tcplot}) para el parámetro de escala modificado.}
+    \label{fig:tcplot_scale}
+
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.7\textwidth]{imagenes/shape.png}
+    \caption{Gráfico de elección de umbral (\texttt{tcplot}) para el parámetro de forma $\xi$.}
+    \label{fig:tcplot_shape}
+\end{figure}
+Se busca encontrar un umbral crítico $u$ tal que estabalice el valor de cada parámetro de la distribución GDP. Bajo la hipotesis que la excedencias $X_i-u$ siguen la distribución
+GDP, por ende, los parámetros deben permanecer aproximadamente constantes. El valor escogido es el menor valor a partir el cual los parámetros estimados de $\sigma$ y $\xi$ 
+se mantienen estables. Se tomó el umbral $u=5.2$.
+
+
+Como primer acercamiento, es estimó la distribución GDP con el umbral definido y con los parámetros de escala y forma constantes, obteniendo el siguiente comportamiento:
+\begin{table}[H]
+    \centering
+    \begin{tabular}{lcccc}
+        \toprule
+        Parámetro & Estimación & Error estándar & $t$ & $p$-valor \\
+        \midrule
+        $\log(\sigma)$ (intercepto) & $-0.64$ & $0.03$ & $-19.00$ & $< 2 \times 10^{-16}$ \\
+        $\xi$ (intercepto)          & $-0.08$ & $0.02$ & $-3.82$  & $6.6 \times 10^{-5}$ \\
+        \bottomrule
+    \end{tabular}
+    \caption{Estimaciones del modelo GPD estacionario para las excedencias sobre $u = 5.2$.}
+    \label{tab:gpd_estacionario}
+\end{table} 
+
+Como se mencionó anteriormente el enfoque POT es el más eficiente y fue considerado para el modelamiento de eventos extremos. Por tanto, un paso clave es definir
+en nuestra base de datos un candidato al umbral crítico que separará los eventos extremos del catálogo de sísmos. En la práctica dependerá mucho el objetivo del estudio
+para definir el valor del umbral crítico, pero en este caso, el umbral crítico fue obtenido mediante el método visual \textit{tcplot} el cual verifica la estabilidad 
+de los parámetros $\sigma$ y $\xi$ de la GPD para umbrales crecientes.
