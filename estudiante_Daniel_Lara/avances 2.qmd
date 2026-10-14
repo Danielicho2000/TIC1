@@ -505,72 +505,11 @@ ggplot(datos_ind, aes(x = magnitude)) +
        title = "Histograma de magnitudes") +
   theme_minimal()
 
-datos_filtrados <- subset(datos_ind, magnitude > umbral)
-datos_filtrados$periodo <- cut(datos_filtrados$time, breaks = "1 year")
 
-conteo <- table(datos_filtrados$periodo)
-conteo <- conteo[conteo > 0]
-
-años <- as.integer(substr(names(conteo), 1, 4))
-valores <- as.numeric(conteo)
-fit_loess <- loess(N_anual ~ anios, span = 0.5)  # span: 0.2 (muy flexible) a 0.8 (muy suave)
-
-plot(anios, N_anual, type = "l", col = "gray60",
-     main = "Sismos M > 4.5 por año",
-     xlab = "Año", ylab = "N eventos")
-lines(anios, predict(fit_loess), col = "firebrick", lwd = 2)
-grid()
 ```
 
 ```{r}
-# --- 0. Verificar el tipo de dato ---
-str(datos_filtrados$time)
-class(datos_filtrados$time)
 
-# --- 1. Convertir time a numérico (días) ---
-tiempos <- as.numeric(datos_filtrados$time)
-tiempos <- sort(tiempos)
-cat("Rango temporal:", min(tiempos), "a", max(tiempos), "\n")
-cat("N eventos:", length(tiempos), "\n")
-
-# --- 2. Definir ventana h ---
-h <- 365.25  # 1 año en días
-
-# --- 3. Crear cortes y contar ---
-cortes <- seq(min(tiempos), max(tiempos) + h, by = h)
-conteos <- sapply(1:(length(cortes)-1), function(i) {
-  sum(tiempos >= cortes[i] & tiempos < cortes[i+1])
-})
-
-# --- 4. Verificar que haya conteos ---
-cat("N ventanas:", length(conteos), "\n")
-cat("Resumen de conteos:\n")
-print(summary(conteos))
-cat("Media:", mean(conteos), "\n")
-
-# --- 5. Gráfico ---
-brk <- seq(-0.5, max(conteos) + 0.5, by = 1)
-
-hist(conteos,
-     breaks = brk,
-     col = "steelblue", border = "white",
-     xlab = "Número de sismos por año",
-     ylab = "Frecuencia",
-     main = "Conteos anuales vs Poisson",
-     cex.main = 1.4, cex.lab = 1.2,
-     freq = TRUE)
-
-# Superponer Poisson teórica
-x_vals <- 0:max(conteos)
-y_teor <- dpois(x_vals, mean(conteos)) * length(conteos)
-
-lines(x_vals, y_teor,
-      col = "red", lwd = 2, type = "o", pch = 16)
-
-legend("topright",
-       legend = c("Observado", "Poisson teórica"),
-       col = c("steelblue", "red"),
-       lwd = 2, pch = c(15, 16), bty = "n")
 ```
 
 Análisis de Picos sobre el Umbral (POT) fault
@@ -1047,13 +986,13 @@ teoricos_exp <- qexp(ppoints(n_obs))
 df_qq_long <- residuos_limpios %>%
   mutate(teoricos = teoricos_exp) %>%
   pivot_longer(cols = c(
-    #m6,
-     #m5, 
+   # m6,
+    #m5, 
     #    m0, 
     #    m1,
      #   m2,
-     #   m3,
-    m4
+        m3,
+    #m4
   ), 
   names_to = "Modelo", 
   values_to = "Residual") %>%

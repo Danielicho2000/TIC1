@@ -310,26 +310,31 @@ suficiente para el análisis POT. Para cada umbral inicial se presenta la cantid
 
 
 \section{Umbral Crítico y Modelamiento mediante GDP}
-Fundamentandose en la convergencia débil de variables, aleatorias, presentamos la variable $m_i-u$ con $m_i$ como la magnitud del evento sísimico i y $u$ un real positivo tal que supera el valor propuesto 
-de la magnitud mínima de G-R. Debemos notar que su función de probabilidad condicionada a las magnitudes que superan $u$.
+Fundamentandose en la convergencia débil de variables aleatorias, presentamos la variable $m_i-u$ con $m_i$ como la magnitud del evento sísimico i y un umbral crítico $u\in \mathbb{R}^+$ tal que $u<\max_{1,\dots,n}(m_i: m_i\geq M_c)$. 
+Debemos notar que su función de probabilidad condicionada a las magnitudes que superan $u$ es:
 \begin{equation}
     F_u (y)=Pr(M-u\leq y| M-u\ge 0)=\frac{F(u+y)-F(u)}{1-F(u)}, y\ge 0,
     \cite{pickands1975statistical}
 \end{equation}
-converge débilmente a una GDP cuando $u$ se apróxima al extremo superior del soporte de $F_u$. Formalmente;
+Además converge débilmente a una GDP cuando $u$ se apróxima al extremo superior del soporte de $F_u$. Formalmente;
 \begin{align}
-    \lim_{u \to x_F} \sup_{y > 0} \left| F_u(y) - GDP(y; \sigma(u), \xi) \right| = 0. \\
+    \lim_{u \to x_F} \sup_{0\leq x_{F^{-u}}} \left| F_u(x) - GDP(x; \sigma(u), \xi) \right| = 0 & \text{ si y solo si} & F\in DAM(H_\xi)\\
     x_F=sup\{x \in \mathbb{R}: F(x)< 1\}
 \end{align}
-Con la distribución GDP mencionada en \ref{eq:GPD}. 
+Con la distribución GDP mencionada en \ref{eq:GDP_ec} y el \textit{DAM}($H_\xi$) con el dominio de atracción de máximos \cite{DAM} y con $H_\xi$ es la distribución GEV.
 
-Es necesario encontrar el umbral crítico $u$ que establecerá la convergencia hacia una GDP. La elección del umbral $u$ muchas veces se es escogido según el objetivo de la actividad, por ejemplo medir que tanto
-resistirá la barrera que separa al mar. \cite{waverley1954report} 
+Este resultado otorga el sustento que nuestras variables $m_i-u$ convergen en distribución a una distribución GP si y solo si $F\in DAM(H_\xi)$.
 
-Pero en este caso la selección de $u$ se la hizo mediante un enfoque visual a la gráficas de \textit{tcplot}, buscando la estabilidad de cada parámetro de la GDP, es decir, que el valor del parámetro no cambie en
-función de la elección del umbral. Se busca que se cumpla para cada parámetro:
+
+
+Es necesario encontrar el umbral crítico $u$ que establecerá la convergencia hacia una GDP. La elección del umbral $u$ muchas veces se es escogido según el objetivo de la actividad bajo la hipotesis que $u$ está cercano a $x_F$,
+ por ejemplo medir que tanto resistirá la barrera que separa al mar. \cite{waverley1954report} 
+
+Pero en este caso la selección de $u$ se la hizo mediante un enfoque visual a la gráficas de \textit{tcplot}, buscando la estabilidad de cada parámetro de la GDP, es decir, que el valor del parámetro no cambie en 
+función al incremento del umbral. Se requiere que a partir del umbral crítico $u_0$ se satisfaga que:
 \begin{itemize}
-    \item $X_i$ sea invariante al umbral.
+    \item $\tilde{\sigma}(u)=\sigma_u -\xi u, \forall u>u_0$ sea invariante al umbral.
+    \item $\tilde{\xi(u)}=\xi, \forall u>u_0$ sea invariante al umbral.
 \end{itemize}
 
 \begin{figure}[H]
@@ -346,12 +351,12 @@ función de la elección del umbral. Se busca que se cumpla para cada parámetro
     \caption{Gráfico de elección de umbral (\texttt{tcplot}) para el parámetro de forma $\xi$.}
     \label{fig:tcplot_shape}
 \end{figure}
-Se busca encontrar un umbral crítico $u$ tal que estabalice el valor de cada parámetro de la distribución GDP. Bajo la hipotesis que la excedencias $X_i-u$ siguen la distribución
-GDP, por ende, los parámetros deben permanecer aproximadamente constantes. El valor escogido es el menor valor a partir el cual los parámetros estimados de $\sigma$ y $\xi$ 
+El valor escogido es el menor valor a partir el cual los parámetros estimados de $\sigma$ y $\xi$ 
 se mantienen estables. Se tomó el umbral $u=5.2$.
 
-
-Como primer acercamiento, es estimó la distribución GDP con el umbral definido y con los parámetros de escala y forma constantes, obteniendo el siguiente comportamiento:
+\subsection{Modelo con parámetros de Escala y Forma constante}
+Como primer acercamiento, es estimó la distribución GDP con el umbral definido y con los parámetros de escala y forma constantes en cuanto a covariables de estudio que serán agregadas más adelante.
+Obteniendo el siguiente comportamiento:
 \begin{table}[H]
     \centering
     \begin{tabular}{lcccc}
@@ -366,7 +371,4 @@ Como primer acercamiento, es estimó la distribución GDP con el umbral definido
     \label{tab:gpd_estacionario}
 \end{table} 
 
-Como se mencionó anteriormente el enfoque POT es el más eficiente y fue considerado para el modelamiento de eventos extremos. Por tanto, un paso clave es definir
-en nuestra base de datos un candidato al umbral crítico que separará los eventos extremos del catálogo de sísmos. En la práctica dependerá mucho el objetivo del estudio
-para definir el valor del umbral crítico, pero en este caso, el umbral crítico fue obtenido mediante el método visual \textit{tcplot} el cual verifica la estabilidad 
-de los parámetros $\sigma$ y $\xi$ de la GPD para umbrales crecientes.
+

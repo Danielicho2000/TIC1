@@ -19,6 +19,7 @@
 \contentsline {subsection}{\numberline {2.4.1}Densidad espacial}{20}{subsection.2.4.1}%
 \contentsline {subsection}{\numberline {2.4.2}Análisis exploratorio del catálogo de sismos desclusterizados}{21}{subsection.2.4.2}%
 \contentsline {section}{\numberline {2.5}Umbral Crítico y Modelamiento mediante GDP}{23}{section.2.5}%
+\contentsline {subsection}{\numberline {2.5.1}Modelo con parámetros de Escala y Forma constante}{25}{subsection.2.5.1}%
 \contentsline {chapter}{\numberline {3}Resultados, conclusiones y recomendaciones}{26}{chapter.3}%
 \contentsline {section}{\numberline {3.1}Resultados}{26}{section.3.1}%
 \contentsline {section}{\numberline {3.2}Conclusiones y recomendaciones}{26}{section.3.2}%

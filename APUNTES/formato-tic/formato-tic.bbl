@@ -1,5 +1,10 @@
 \begin{thebibliography}{1}
 
+\bibitem{DAM}
+August~A Balkema and Laurens de~Haan.
+\newblock Residual life time at great age.
+\newblock {\em The Annals of Probability}, 2(5):792--804, 1974.
+
 \bibitem{cqf2024extreme}
 {Certificate in Quantitative Finance (CQF)}.
 \newblock What is {Extreme Value Theory}?

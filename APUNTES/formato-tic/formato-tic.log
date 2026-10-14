@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  12 OCT 2026 22:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (MiKTeX 26.2) (preloaded format=pdflatex 2026.4.8)  13 OCT 2026 20:48
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -461,7 +461,7 @@ Package hyperref Info: Link coloring ON on input line 4.
 \@outlinefile=\write3
 \openout3 = `formato-tic.out'.
 
-<Imagenes/logoEPNnuevo.png, id=102, 611.76555pt x 697.04414pt>
+<Imagenes/logoEPNnuevo.png, id=106, 611.76555pt x 697.04414pt>
 File: Imagenes/logoEPNnuevo.png Graphic file (type png)
 <use Imagenes/logoEPNnuevo.png>
 Package pdftex.def Info: Imagenes/logoEPNnuevo.png  used on input line 19.
@@ -478,7 +478,7 @@ LaTeX Font Info:    Trying to load font information for U+rsfs on input line 19.
  (C:\Users\USER\AppData\Local\Programs\MiKTeX\tex/latex/jknappen\ursfs.fd
 File: ursfs.fd 1998/03/24 rsfs font definition file (jk)
 )
-<Imagenes/logoCiencias.png, id=104, 781.92125pt x 790.955pt>
+<Imagenes/logoCiencias.png, id=108, 781.92125pt x 790.955pt>
 File: Imagenes/logoCiencias.png Graphic file (type png)
 <use Imagenes/logoCiencias.png>
 Package pdftex.def Info: Imagenes/logoCiencias.png  used on input line 19.
@@ -618,12 +618,12 @@ l.21 \section{Base de datos}
 
 
 ]
-<imagenes/ST-sismos.png, id=296, 496.85625pt x 304.13625pt>
+<imagenes/ST-sismos.png, id=301, 496.85625pt x 304.13625pt>
 File: imagenes/ST-sismos.png Graphic file (type png)
 <use imagenes/ST-sismos.png>
 Package pdftex.def Info: imagenes/ST-sismos.png  used on input line 30.
 (pdftex.def)             Requested size: 204.85802pt x 125.39742pt.
-<imagenes/post ST-sismos.png, id=297, 502.12593pt x 317.68687pt>
+<imagenes/post ST-sismos.png, id=302, 502.12593pt x 317.68687pt>
 File: imagenes/post ST-sismos.png Graphic file (type png)
 <use imagenes/post ST-sismos.png>
 Package pdftex.def Info: imagenes/post ST-sismos.png  used on input line 31.
@@ -646,12 +646,12 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.1}) h
                                                   \__shipout_drop_firstpage_...
 l.43 
       <./imagenes/ST-sismos.png> <./imagenes/post ST-sismos.png>]
-<imagenes/GR-law.png, id=306, 499.11469pt x 313.9228pt>
+<imagenes/GR-law.png, id=311, 499.11469pt x 313.9228pt>
 File: imagenes/GR-law.png Graphic file (type png)
 <use imagenes/GR-law.png>
 Package pdftex.def Info: imagenes/GR-law.png  used on input line 46.
 (pdftex.def)             Requested size: 320.09349pt x 201.33142pt.
-<imagenes/K-R clust.png, id=307, 502.12593pt x 311.66437pt>
+<imagenes/K-R clust.png, id=312, 502.12593pt x 311.66437pt>
 File: imagenes/K-R clust.png Graphic file (type png)
 <use imagenes/K-R clust.png>
 Package pdftex.def Info: imagenes/K-R clust.png  used on input line 60.
@@ -692,7 +692,7 @@ Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 Package hyperref Warning: Token not allowed in a PDF string (Unicode):
 (hyperref)                removing `math shift' on input line 159.
 
-<imagenes/log(eta).png, id=329, 499.11469pt x 310.15875pt>
+<imagenes/log(eta).png, id=334, 499.11469pt x 310.15875pt>
 File: imagenes/log(eta).png Graphic file (type png)
 <use imagenes/log(eta).png>
 Package pdftex.def Info: imagenes/log(eta).png  used on input line 165.
@@ -703,7 +703,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.4}) h
                                                   \__shipout_drop_firstpage_...
 l.177 
        <./imagenes/log(eta).png>]
-<imagenes/log(eta)1.png, id=343, 498.36188pt x 308.65312pt>
+<imagenes/log(eta)1.png, id=348, 498.36188pt x 308.65312pt>
 File: imagenes/log(eta)1.png Graphic file (type png)
 <use imagenes/log(eta)1.png>
 Package pdftex.def Info: imagenes/log(eta)1.png  used on input line 180.
@@ -714,12 +714,12 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.5}) h
                                                   \__shipout_drop_firstpage_...
 l.197 
        <./imagenes/log(eta)1.png>]
-<imagenes/mix-norm.jpeg, id=350, 1348.03625pt x 947.54pt>
+<imagenes/mix-norm.jpeg, id=355, 1348.03625pt x 947.54pt>
 File: imagenes/mix-norm.jpeg Graphic file (type jpg)
 <use imagenes/mix-norm.jpeg>
 Package pdftex.def Info: imagenes/mix-norm.jpeg  used on input line 200.
 (pdftex.def)             Requested size: 234.73653pt x 164.9834pt.
-<imagenes/f1-f2.png, id=352, 659.46375pt x 328.22626pt>
+<imagenes/f1-f2.png, id=357, 659.46375pt x 328.22626pt>
 File: imagenes/f1-f2.png Graphic file (type png)
 <use imagenes/f1-f2.png>
 Package pdftex.def Info: imagenes/f1-f2.png  used on input line 209.
@@ -740,7 +740,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.7}) h
                                                   \__shipout_drop_firstpage_...
 l.249 \end{table}
                   <./imagenes/mix-norm.jpeg> <./imagenes/f1-f2.png>]
-<imagenes/densidad.png, id=358, 997.47656pt x 581.17125pt>
+<imagenes/densidad.png, id=363, 997.47656pt x 581.17125pt>
 File: imagenes/densidad.png Graphic file (type png)
 <use imagenes/densidad.png>
 Package pdftex.def Info: imagenes/densidad.png  used on input line 258.
@@ -751,7 +751,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{table.2.2}) ha
                                                   \__shipout_drop_firstpage_...
 l.262 L
        a distribución espacial de los epicentros evidencia un patrón heter...]
-<imagenes/st eventos.png, id=364, 502.12593pt x 313.17pt>
+<imagenes/st eventos.png, id=369, 502.12593pt x 313.17pt>
 File: imagenes/st eventos.png Graphic file (type png)
 <use imagenes/st eventos.png>
 Package pdftex.def Info: imagenes/st eventos.png  used on input line 272.
@@ -762,7 +762,7 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.8}) h
                                                   \__shipout_drop_firstpage_...
 l.276 E
        n la figura \ref{fig:serie_temporal} se muestra una variabilidad cons... <./imagenes/densidad.png>]
-<imagenes/hist_mag.png, id=371, 275.52937pt x 329.73187pt>
+<imagenes/hist_mag.png, id=376, 275.52937pt x 329.73187pt>
 File: imagenes/hist_mag.png Graphic file (type png)
 <use imagenes/hist_mag.png>
 Package pdftex.def Info: imagenes/hist_mag.png  used on input line 281.
@@ -777,42 +777,38 @@ pdfTeX warning (ext4): destination with the same identifier (name{figure.2.10}) 
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.309 
-       <./imagenes/hist_mag.png>]
-
-LaTeX Warning: Reference `eq:GPD' on page 23 undefined on input line 324.
-
-[23
+       <./imagenes/hist_mag.png>] [23
 pdfTeX warning (ext4): destination with the same identifier (name{table.2.3}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.328 
-      ]
-<imagenes/scale.png, id=395, 500.62032pt x 317.68687pt>
+l.330 E
+       s necesario encontrar el umbral crítico $u$ que establecerá la conv...]
+<imagenes/scale.png, id=403, 500.62032pt x 317.68687pt>
 File: imagenes/scale.png Graphic file (type png)
 <use imagenes/scale.png>
-Package pdftex.def Info: imagenes/scale.png  used on input line 337.
+Package pdftex.def Info: imagenes/scale.png  used on input line 342.
 (pdftex.def)             Requested size: 298.75262pt x 189.59076pt.
-<imagenes/shape.png, id=396, 500.62032pt x 317.68687pt>
+<imagenes/shape.png, id=404, 500.62032pt x 317.68687pt>
 File: imagenes/shape.png Graphic file (type png)
 <use imagenes/shape.png>
-Package pdftex.def Info: imagenes/shape.png  used on input line 345.
+Package pdftex.def Info: imagenes/shape.png  used on input line 350.
 (pdftex.def)             Requested size: 298.75262pt x 189.59076pt.
  [24
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.11}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.352 
-      
+l.354 E
+       l valor escogido es el menor valor a partir el cual los parámetros e... <./imagenes/scale.png>]) [25
 pdfTeX warning (ext4): destination with the same identifier (name{figure.2.12}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
-l.352 
-       <./imagenes/scale.png> <./imagenes/shape.png>]) [25
+l.46      \include{Capitulos-Anexos/cap-02}
+                                           
 pdfTeX warning (ext4): destination with the same identifier (name{table.2.4}) has been already used, duplicate ignored
 <argument> ...shipout:D \box_use:N \l_shipout_box 
                                                   \__shipout_drop_firstpage_...
 l.46      \include{Capitulos-Anexos/cap-02}
-                                           ]
+                                            <./imagenes/shape.png>]
 \openout2 = `Capitulos-Anexos/cap-03.aux'.
 
  (Capitulos-Anexos/cap-03.tex
@@ -833,7 +829,7 @@ Ap\'{e}ndice A.
 
 
 ] (formato-tic.bbl
-Underfull \hbox (badness 1708) in paragraph at lines 4--11
+Underfull \hbox (badness 1708) in paragraph at lines 9--16
 \T1/pbk/l/n/12 lue Theory?  [][]$\T1/pcr/m/n/12 https : / / www . cqf . com / blog / quant-[]finance-[]101 /
  []
 
@@ -849,25 +845,21 @@ LaTeX Info: Redefining \% on input line 11.
 LaTeX2e <2025-11-01>
 L3 programming layer <2026-01-19>
  ***********
-
-
-LaTeX Warning: There were undefined references.
-
 Package rerunfilecheck Info: File `formato-tic.out' has not changed.
-(rerunfilecheck)             Checksum: 854CE906AB707FCFC1CEC5E0DB476CF5;5338.
+(rerunfilecheck)             Checksum: 85BB7B4044FD3E4DBF62527911A8CCBC;5669.
  ) 
 Here is how much of TeX's memory you used:
- 13642 strings out of 467867
- 214761 string characters out of 5418819
- 648446 words of memory out of 5000000
- 42165 multiletter control sequences out of 15000+600000
+ 13647 strings out of 467867
+ 214835 string characters out of 5418819
+ 649474 words of memory out of 5000000
+ 42168 multiletter control sequences out of 15000+600000
  659464 words of font info for 116 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  90i,15n,93p,696b,800s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmbx12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr12.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy6.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkd8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkdi8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkl8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/bookman/ubkli8a.pfb><C:/Users/USER/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb>
-Output written on formato-tic.pdf (38 pages, 845893 bytes).
+Output written on formato-tic.pdf (38 pages, 847839 bytes).
 PDF statistics:
- 534 PDF objects out of 1000 (max. 8388607)
- 101 named destinations out of 1000 (max. 500000)
- 276 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 543 PDF objects out of 1000 (max. 8388607)
+ 103 named destinations out of 1000 (max. 500000)
+ 284 words of extra memory for PDF output out of 10000 (max. 10000000)
 
